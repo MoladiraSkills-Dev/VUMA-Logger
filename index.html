@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
     rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -484,11 +484,11 @@
           const payload = JSON.stringify({ method: methodName, args: args });
           // Generate a unique callback function name for JSONP
           const callbackName = "jsonp_callback_" + Math.round(1000000 * Math.random());
-          
+
           const targetUrl = APPS_SCRIPT_WEB_APP_URL + "?payload=" + encodeURIComponent(payload) + "&callback=" + callbackName;
 
           // Define the callback function globally so the script can execute it
-          window[callbackName] = function(data) {
+          window[callbackName] = function (data) {
             delete window[callbackName]; // Cleanup
             document.body.removeChild(script); // Cleanup
             resolve(data);
@@ -502,7 +502,7 @@
             document.body.removeChild(script);
             reject(new Error("Network request failed (JSONP blocked or network error)"));
           };
-          
+
           document.body.appendChild(script);
         });
       }
