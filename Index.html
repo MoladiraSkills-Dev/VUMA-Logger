@@ -1,0 +1,1872 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>VUMA Logger - Workforce Attendance Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <style>
+    /* =============================================
+       VUMA LOGGER — DESIGN SYSTEM
+       Inspired by vumatel.co.za brand identity
+       Primary: Magenta/Pink (#D01C85)
+       Secondary: Dark Navy (#1A1033)
+       ============================================= */
+
+    :root {
+      /* Brand Core */
+      --vuma-magenta: #D01C85;
+      --vuma-magenta-light: #E84AA5;
+      --vuma-magenta-dark: #A3156A;
+      --vuma-magenta-50: #FDF2F8;
+      --vuma-magenta-100: #FCE7F3;
+      --vuma-magenta-200: #FBCFE8;
+
+      /* Dark Navy/Purple palette */
+      --vuma-navy: #1A1033;
+      --vuma-navy-light: #2D1B4E;
+      --vuma-navy-lighter: #3D2666;
+      --vuma-purple-accent: #7C3AED;
+
+      /* Neutrals */
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+
+      /* Functional */
+      --success: #10B981;
+      --success-bg: #ECFDF5;
+      --success-border: #A7F3D0;
+      --warning: #F59E0B;
+      --warning-bg: #FFFBEB;
+      --warning-border: #FDE68A;
+      --danger: #EF4444;
+      --danger-bg: #FEF2F2;
+      --danger-border: #FECACA;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, var(--vuma-navy) 0%, #130C24 100%);
+      min-height: 100vh;
+      color: var(--slate-800);
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 3rem;
+    }
+
+    /* --- Global Spinner --- */
+    .global-spinner-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 16, 51, 0.80);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .global-spinner-overlay.active {
+      display: flex;
+    }
+
+    .spinner-ring {
+      width: 56px;
+      height: 56px;
+      border: 4px solid rgba(255, 255, 255, 0.15);
+      border-top-color: var(--vuma-magenta);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .spinner-msg {
+      background: white;
+      color: var(--slate-800);
+      font-weight: 700;
+      font-size: 0.8125rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      letter-spacing: 0.01em;
+    }
+
+    /* --- Scrollbar --- */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--slate-300);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--vuma-magenta);
+    }
+
+    /* --- Layout --- */
+    .main-container {
+      max-width: 28rem;
+      margin: 0 auto;
+      padding: 1rem 1rem 2rem;
+      transition: max-width 0.3s ease;
+    }
+
+    .main-container.admin-wide {
+      max-width: 84rem;
+    }
+
+    /* --- Card Base --- */
+    .card {
+      background: white;
+      border-radius: 1.5rem;
+      border: 1px solid var(--slate-200);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    /* --- Buttons --- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      border-radius: 0.75rem;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--vuma-magenta) 0%, var(--vuma-magenta-dark) 100%);
+      color: white;
+      box-shadow: 0 4px 14px rgba(208, 28, 133, 0.35);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.92;
+    }
+
+    .btn-secondary {
+      background: var(--vuma-navy);
+      color: white;
+      box-shadow: 0 4px 14px rgba(26, 16, 51, 0.25);
+    }
+
+    .btn-secondary:hover {
+      background: var(--vuma-navy-light);
+    }
+
+    .btn-ghost {
+      background: var(--slate-100);
+      color: var(--slate-700);
+      border: 1px solid var(--slate-200);
+    }
+
+    .btn-ghost:hover {
+      background: var(--slate-200);
+    }
+
+    .btn-danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid var(--danger-border);
+    }
+
+    .btn-danger:hover {
+      background: #FEE2E2;
+    }
+
+    .btn-success {
+      background: var(--success-bg);
+      color: #059669;
+      border: 1px solid var(--success-border);
+    }
+
+    .btn-success:hover {
+      background: #D1FAE5;
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    .btn-lg {
+      padding: 0.875rem 1.5rem;
+      font-size: 1rem;
+    }
+
+    .btn-md {
+      padding: 0.625rem 1rem;
+      font-size: 0.8125rem;
+    }
+
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.75rem;
+    }
+
+    /* --- Inputs --- */
+    .input-field {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--slate-200);
+      border-radius: 0.75rem;
+      background: var(--slate-50);
+      color: var(--slate-900);
+      font-size: 0.9375rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .input-field:focus {
+      border-color: var(--vuma-magenta);
+      box-shadow: 0 0 0 3px rgba(208, 28, 133, 0.15);
+      background: white;
+    }
+
+    .input-field::placeholder {
+      color: var(--slate-400);
+    }
+
+    .input-label {
+      display: block;
+      font-size: 0.625rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--slate-500);
+      margin-bottom: 0.375rem;
+    }
+
+    /* --- Alert boxes --- */
+    .alert {
+      padding: 0.875rem 1rem;
+      border-radius: 0.75rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      display: none;
+    }
+
+    .alert.visible {
+      display: block;
+    }
+
+    .alert-success {
+      background: var(--success-bg);
+      color: #059669;
+      border: 1px solid var(--success-border);
+    }
+
+    .alert-error {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid var(--danger-border);
+    }
+
+    /* --- Badge --- */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.625rem;
+      border-radius: 0.375rem;
+      font-size: 0.625rem;
+      font-weight: 700;
+      border: 1px solid;
+    }
+
+    .badge-magenta {
+      background: var(--vuma-magenta-50);
+      color: var(--vuma-magenta);
+      border-color: var(--vuma-magenta-200);
+    }
+
+    .badge-success {
+      background: var(--success-bg);
+      color: #059669;
+      border-color: var(--success-border);
+    }
+
+    .badge-warning {
+      background: var(--warning-bg);
+      color: #B45309;
+      border-color: var(--warning-border);
+    }
+
+    .badge-danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border-color: var(--danger-border);
+    }
+
+    .badge-purple {
+      background: #F5F3FF;
+      color: #7C3AED;
+      border-color: #DDD6FE;
+    }
+
+    .badge-orange {
+      background: #FFF7ED;
+      color: #EA580C;
+      border-color: #FED7AA;
+    }
+
+    .badge-navy {
+      background: rgba(26, 16, 51, 0.06);
+      color: var(--vuma-navy);
+      border-color: rgba(26, 16, 51, 0.12);
+    }
+
+    /* --- Tables --- */
+    .data-table {
+      width: 100%;
+      text-align: left;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+    }
+
+    .data-table thead tr {
+      background: var(--slate-100);
+      border-bottom: 1px solid var(--slate-200);
+    }
+
+    .data-table th {
+      padding: 0.875rem;
+      font-size: 0.625rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--slate-500);
+    }
+
+    .data-table tbody tr {
+      border-bottom: 1px solid var(--slate-100);
+      transition: background 0.15s ease;
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--slate-50);
+    }
+
+    .data-table td {
+      padding: 0.875rem;
+      color: var(--slate-700);
+    }
+
+    /* --- Tabs --- */
+    .tab-bar {
+      display: flex;
+      width: 100%;
+      background: white;
+      padding: 0.375rem;
+      border-radius: 0.75rem;
+      border: 1px solid var(--slate-200);
+      gap: 0.25rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 0.625rem 0.75rem;
+      border-radius: 0.625rem;
+      font-weight: 700;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      border: none;
+      cursor: pointer;
+      background: transparent;
+      color: var(--slate-500);
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--slate-900);
+    }
+
+    .tab-btn.active {
+      background: var(--vuma-magenta);
+      color: white;
+      box-shadow: 0 2px 8px rgba(208, 28, 133, 0.25);
+    }
+
+    /* --- Modal --- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 16, 51, 0.65);
+      backdrop-filter: blur(6px);
+      z-index: 5000;
+      justify-content: center;
+      align-items: flex-end;
+      padding: 0;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    @media (min-width: 768px) {
+      .modal-overlay {
+        align-items: center;
+        padding: 1rem;
+      }
+
+      .modal-card {
+        border-radius: 1.25rem !important;
+      }
+    }
+
+    .modal-card {
+      background: white;
+      border-radius: 1.5rem 1.5rem 0 0;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 24rem;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--slate-200);
+    }
+
+    /* --- Hidden class --- */
+    .hidden {
+      display: none !important;
+    }
+
+    /* --- Utility --- */
+    .text-center {
+      text-align: center;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    .font-mono {
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .overflow-x-auto {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .space-y>*+* {
+      margin-top: 1rem;
+    }
+
+    .space-y-sm>*+* {
+      margin-top: 0.75rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .mt-1 {
+      margin-top: 0.25rem;
+    }
+
+    .mt-2 {
+      margin-top: 0.5rem;
+    }
+
+    .mt-3 {
+      margin-top: 0.75rem;
+    }
+
+    .mt-4 {
+      margin-top: 1rem;
+    }
+
+    .mt-6 {
+      margin-top: 1.5rem;
+    }
+
+    .mb-2 {
+      margin-bottom: 0.5rem;
+    }
+
+    .mb-4 {
+      margin-bottom: 1rem;
+    }
+
+    .mb-6 {
+      margin-bottom: 1.5rem;
+    }
+
+    .gap-2 {
+      gap: 0.5rem;
+    }
+
+    .gap-3 {
+      gap: 0.75rem;
+    }
+
+    .gap-4 {
+      gap: 1rem;
+    }
+
+    .flex {
+      display: flex;
+    }
+
+    .flex-col {
+      flex-direction: column;
+    }
+
+    .items-center {
+      align-items: center;
+    }
+
+    .justify-between {
+      justify-content: space-between;
+    }
+
+    .w-full {
+      width: 100%;
+    }
+
+    .block {
+      display: block;
+    }
+
+    /* --- Animations --- */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-in {
+      animation: fadeIn 0.35s ease forwards;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .animate-pulse {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* --- Ping dot --- */
+    .ping-dot {
+      position: relative;
+      display: inline-flex;
+      width: 8px;
+      height: 8px;
+    }
+
+    .ping-dot::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+
+    .ping-dot::after {
+      content: '';
+      position: relative;
+      display: inline-flex;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .ping-dot.magenta::before {
+      background: rgba(208, 28, 133, 0.5);
+    }
+
+    .ping-dot.magenta::after {
+      background: var(--vuma-magenta);
+    }
+
+    .ping-dot.orange::before {
+      background: rgba(234, 88, 12, 0.5);
+    }
+
+    .ping-dot.orange::after {
+      background: #EA580C;
+    }
+
+    @keyframes ping {
+
+      75%,
+      100% {
+        transform: scale(2);
+        opacity: 0;
+      }
+    }
+
+    /* --- Clock buttons --- */
+    .clock-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem;
+      border-radius: 1rem;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .clock-btn:active {
+      transform: scale(0.97);
+    }
+
+    .clock-btn-in {
+      background: linear-gradient(135deg, var(--vuma-magenta) 0%, var(--vuma-magenta-dark) 100%);
+      color: white;
+      box-shadow: 0 6px 20px rgba(208, 28, 133, 0.35);
+    }
+
+    .clock-btn-out {
+      background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%);
+      color: white;
+      box-shadow: 0 6px 20px rgba(234, 88, 12, 0.35);
+    }
+
+    .clock-btn:hover {
+      filter: brightness(1.05);
+    }
+
+    .clock-btn .icon {
+      font-size: 1.75rem;
+    }
+
+    .clock-btn .label {
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+
+    .clock-btn .arrow {
+      font-size: 1.25rem;
+      opacity: 0.8;
+    }
+
+    /* === VUMA Logo Header === */
+    .vuma-brand {
+      width: 4rem;
+      height: 4rem;
+      border-radius: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      background: linear-gradient(135deg, var(--vuma-magenta) 0%, var(--vuma-navy) 100%);
+      box-shadow: 0 8px 30px rgba(208, 28, 133, 0.3);
+    }
+
+    .vuma-brand-text {
+      font-size: 1rem;
+      font-weight: 900;
+      color: white;
+      letter-spacing: -0.03em;
+    }
+
+    /* Stat widget */
+    .stat-widget {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: white;
+      border: 1px solid var(--slate-200);
+      padding: 0.375rem 0.75rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    .stat-label {
+      font-size: 0.625rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--slate-500);
+    }
+
+    .stat-value-magenta {
+      font-size: 0.875rem;
+      font-weight: 900;
+      color: var(--vuma-magenta);
+    }
+
+    .stat-value-orange {
+      font-size: 0.875rem;
+      font-weight: 900;
+      color: #EA580C;
+    }
+
+    .stat-divider {
+      width: 1px;
+      height: 1rem;
+      background: var(--slate-200);
+    }
+
+    /* Responsive helpers */
+    @media (min-width: 640px) {
+      .sm-flex-row {
+        flex-direction: row;
+      }
+
+      .sm-w-auto {
+        width: auto;
+      }
+
+      .sm-grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (min-width: 1280px) {
+      .xl-flex-row {
+        flex-direction: row;
+      }
+
+      .xl-w-auto {
+        width: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- GLOBAL SPINNER -->
+  <div id="globalSpinner" class="global-spinner-overlay">
+    <div class="spinner-ring"></div>
+    <p class="spinner-msg" id="spinnerMessage">Processing request...</p>
+  </div>
+
+  <main id="mainContainer" class="main-container">
+
+    <!-- ===== AUTHENTICATION VIEW ===== -->
+    <section id="authView" class="card animate-in" style="margin-top: 2rem; padding: 2rem;">
+      <div class="text-center mb-6">
+        <div class="vuma-brand">
+          <span class="vuma-brand-text">VUMA</span>
+        </div>
+        <h1 style="font-size: 1.5rem; font-weight: 900; letter-spacing: -0.02em; color: var(--slate-900);"
+          id="authTitle">
+          VUMA <span style="font-weight: 300; color: var(--vuma-magenta);">Logger</span>
+        </h1>
+        <p style="font-size: 0.75rem; color: var(--slate-500); margin-top: 0.375rem;" id="authSubtitle">Enter
+          credentials to access the workforce portal.</p>
+      </div>
+
+      <div id="authAlert" class="alert mb-4"></div>
+
+      <form id="loginForm" class="space-y" onsubmit="handleLoginSubmit(event)">
+        <div>
+          <label class="input-label">Work Email</label>
+          <input type="email" id="loginEmail" required class="input-field" placeholder="name@company.co.za">
+        </div>
+        <div>
+          <label class="input-label">Password</label>
+          <input type="password" id="loginPassword" required class="input-field" placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary btn-full btn-lg">Sign In</button>
+        <p style="font-size: 0.75rem; text-align: center; color: var(--slate-500); padding-top: 0.75rem;">
+          New employee? <a href="#" onclick="toggleAuthMode(false)"
+            style="color: var(--vuma-magenta); font-weight: 700; text-decoration: none;">Create account</a>
+        </p>
+      </form>
+
+      <form id="registerForm" class="space-y hidden" onsubmit="handleRegisterSubmit(event)">
+        <div class="grid-2">
+          <div><label class="input-label">First Name</label><input type="text" id="regFirst" required
+              class="input-field"></div>
+          <div><label class="input-label">Last Name</label><input type="text" id="regLast" required class="input-field">
+          </div>
+        </div>
+        <div><label class="input-label">Email Address</label><input type="email" id="regEmail" required
+            class="input-field"></div>
+        <div><label class="input-label">Create Password</label><input type="password" id="regPassword" required
+            class="input-field"></div>
+        <button type="submit" class="btn btn-primary btn-full btn-lg">Submit Registration</button>
+        <p style="font-size: 0.75rem; text-align: center; color: var(--slate-500); padding-top: 0.75rem;">
+          Already have an account? <a href="#" onclick="toggleAuthMode(true)"
+            style="color: var(--vuma-magenta); font-weight: 700; text-decoration: none;">Sign in instead</a>
+        </p>
+      </form>
+    </section>
+
+    <!-- ===== EMPLOYEE PORTAL VIEW ===== -->
+    <section id="employeeView" class="card hidden animate-in" style="margin-top: 1.5rem; padding: 1.5rem;">
+      <div class="text-center"
+        style="border-bottom: 1px solid var(--slate-100); padding-bottom: 1.25rem; margin-bottom: 1.5rem;">
+        <span class="badge badge-magenta mb-2" style="font-size: 0.625rem;">Session Active</span>
+        <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--slate-900); margin-bottom: 0.25rem;"
+          id="employeeGreeting">Welcome!</h2>
+        <button onclick="logout()" class="btn btn-ghost btn-sm mt-3">Logout Session</button>
+      </div>
+
+      <div id="logAlert" class="alert mb-4"></div>
+
+      <p
+        style="font-size: 0.75rem; color: var(--slate-500); margin-bottom: 1.5rem; text-align: center; line-height: 1.5;">
+        Your location settings are critical for attendance logging. Ensure browser location permission is authorized.
+      </p>
+
+      <div class="flex flex-col gap-3 mb-4">
+        <button onclick="triggerClockAction('Clock In')" class="clock-btn clock-btn-in">
+          <div class="flex items-center gap-3"><span class="icon">⏰</span><span class="label">Clock In</span></div>
+          <span class="arrow">➔</span>
+        </button>
+        <button onclick="triggerClockAction('Clock Out')" class="clock-btn clock-btn-out">
+          <div class="flex items-center gap-3"><span class="icon">🚪</span><span class="label">Clock Out</span></div>
+          <span class="arrow">➔</span>
+        </button>
+      </div>
+
+      <button onclick="openLeaveModal()" class="btn btn-ghost btn-full btn-md" style="gap: 0.375rem;">
+        <span>📅</span> Request Leave
+      </button>
+    </section>
+
+    <!-- ===== ADMIN DASHBOARD VIEW ===== -->
+    <section id="adminView" class="hidden space-y" style="margin-top: 1rem;">
+      <!-- Header -->
+      <div class="card" style="padding: 1.25rem;">
+        <div class="flex flex-col sm-flex-row justify-between items-center gap-3" style="flex-wrap: wrap;">
+          <div>
+            <span class="badge badge-magenta" style="font-size: 0.5625rem;">VUMA Admin</span>
+            <h2 style="font-size: 1.25rem; font-weight: 900; color: var(--slate-900); margin-top: 0.25rem;"
+              id="adminGreeting">Manager Dashboard</h2>
+            <button onclick="toggleAdminClockPanel()" class="btn btn-ghost btn-sm mt-2">
+              <span>⏰</span><span id="adminClockToggleText">Go to My Clock In / Out</span>
+            </button>
+          </div>
+          <button onclick="logout()" class="btn btn-danger btn-sm">Exit</button>
+        </div>
+      </div>
+
+      <!-- Admin Self Clock Panel -->
+      <div id="adminSelfClockPanel" class="card hidden" style="max-width: 30rem; margin: 0 auto; padding: 1.5rem;">
+        <div class="text-center mb-4">
+          <h3 style="font-size: 1.125rem; font-weight: 800; color: var(--slate-900);">Admin Attendance Logging</h3>
+          <p style="font-size: 0.75rem; color: var(--slate-500); margin-top: 0.25rem;">Record your daily attendance
+            directly.</p>
+        </div>
+        <div id="adminLogAlert" class="alert mb-4"></div>
+        <div class="grid-2 mb-4">
+          <button onclick="triggerAdminClockAction('Clock In')" class="btn btn-primary btn-md" style="width: 100%;">⏰
+            Clock In</button>
+          <button onclick="triggerAdminClockAction('Clock Out')" class="btn btn-md"
+            style="width: 100%; background: linear-gradient(135deg, #EA580C, #C2410C); color: white; box-shadow: 0 4px 14px rgba(234,88,12,0.25);">🚪
+            Clock Out</button>
+        </div>
+        <button onclick="openLeaveModal()" class="btn btn-ghost btn-full btn-sm">📅 Register Leave</button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="tab-bar">
+        <button onclick="switchAdminTab('logsTab')" id="btn-logsTab" class="tab-btn active">Activity Logs</button>
+        <button onclick="switchAdminTab('summariesTab')" id="btn-summariesTab" class="tab-btn">Daily Summaries</button>
+        <button onclick="switchAdminTab('weeklyTab')" id="btn-weeklyTab" class="tab-btn">Weekly</button>
+        <button onclick="switchAdminTab('monthlyTab')" id="btn-monthlyTab" class="tab-btn">Monthly</button>
+        <button onclick="switchAdminTab('leaveTab')" id="btn-leaveTab" class="tab-btn">Leave</button>
+        <button onclick="switchAdminTab('usersTab')" id="btn-usersTab" class="tab-btn">Staff</button>
+        <button onclick="switchAdminTab('exportTab')" id="btn-exportTab" class="tab-btn">Export</button>
+      </div>
+
+      <!-- TAB 1: ACTIVITY LOGS -->
+      <div id="content-logsTab" class="card">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+          <div class="flex flex-col xl-flex-row justify-between items-center gap-3" style="flex-wrap: wrap;">
+            <div class="flex items-center gap-3" style="flex-wrap: wrap;">
+              <h3 style="font-weight: 800; color: var(--slate-900); font-size: 0.875rem;">Telemetry Activity Logs</h3>
+              <div class="stat-widget">
+                <div class="stat-item"><span class="ping-dot magenta"></span><span
+                    class="stat-label">Logins:</span><span class="stat-value-magenta" id="statLogins">0</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat-item"><span class="ping-dot orange"></span><span
+                    class="stat-label">Logouts:</span><span class="stat-value-orange" id="statLogouts">0</span></div>
+                <span class="font-mono" style="font-size: 0.5625rem; color: var(--slate-400); margin-left: 0.5rem;"
+                  id="statDateDisplay">Today</span>
+              </div>
+            </div>
+            <div class="flex flex-col sm-flex-row gap-2 w-full xl-w-auto">
+              <input type="date" id="filterDate" onchange="applyAdminLogFilters()" class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">
+              <input type="text" id="filterSearch" oninput="applyAdminLogFilters()"
+                placeholder="Search staff name/email..." class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem; min-width: 200px;">
+              <button onclick="resetAdminLogFilters()" class="btn btn-ghost btn-sm">Reset</button>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Staff</th>
+                <th>Time</th>
+                <th>Action</th>
+                <th style="min-width: 250px;">Resolved Location & Coordinates</th>
+                <th>Edited By</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 2: DAILY SUMMARIES -->
+      <div id="content-summariesTab" class="card hidden">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+          <div class="flex flex-col sm-flex-row justify-between items-center gap-3" style="flex-wrap: wrap;">
+            <h3 style="font-weight: 800; color: var(--slate-900); font-size: 0.875rem;">Daily Shift Summaries</h3>
+            <div class="flex flex-col sm-flex-row gap-2 w-full sm-w-auto">
+              <input type="date" id="filterSummaryDate" onchange="applyAdminSummaryFilters()" class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">
+              <input type="text" id="filterSummarySearch" oninput="applyAdminSummaryFilters()"
+                placeholder="Search staff..." class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem; min-width: 200px;">
+              <button onclick="resetAdminSummaryFilters()" class="btn btn-ghost btn-sm">Reset</button>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Date</th>
+                <th>Actual Times</th>
+                <th>Floor Times</th>
+                <th>Net Hours</th>
+                <th>Overtime</th>
+                <th>Status</th>
+                <th class="text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="summariesTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 3: WEEKLY SUMMARIES -->
+      <div id="content-weeklyTab" class="card hidden">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+          <div class="flex flex-col sm-flex-row justify-between items-center gap-3" style="flex-wrap: wrap;">
+            <div>
+              <h3 style="font-weight: 800; color: var(--slate-900); font-size: 0.875rem;">Weekly Work Summaries</h3>
+              <span class="badge badge-navy mt-1">Min: 45h | Max: 55h</span>
+            </div>
+            <div class="flex flex-col sm-flex-row gap-2 w-full sm-w-auto">
+              <input type="text" id="filterWeeklyKey" oninput="applyAdminWeeklyFilters()"
+                placeholder="Week e.g. 2026-W30" class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">
+              <input type="text" id="filterWeeklySearch" oninput="applyAdminWeeklyFilters()"
+                placeholder="Search staff..." class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem; min-width: 200px;">
+              <button onclick="resetAdminWeeklyFilters()" class="btn btn-ghost btn-sm">Reset</button>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Week</th>
+                <th>Total Hours</th>
+                <th>Total Overtime</th>
+                <th>Days Worked</th>
+                <th>Compliance</th>
+              </tr>
+            </thead>
+            <tbody id="weeklyTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 4: MONTHLY SUMMARIES -->
+      <div id="content-monthlyTab" class="card hidden">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+          <div class="flex flex-col sm-flex-row justify-between items-center gap-3" style="flex-wrap: wrap;">
+            <h3 style="font-weight: 800; color: var(--slate-900); font-size: 0.875rem;">Monthly Work Summaries</h3>
+            <div class="flex flex-col sm-flex-row gap-2 w-full sm-w-auto">
+              <input type="month" id="filterMonthlyMonth" onchange="applyAdminMonthlyFilters()" class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">
+              <input type="text" id="filterMonthlySearch" oninput="applyAdminMonthlyFilters()"
+                placeholder="Search staff..." class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem; min-width: 200px;">
+              <button onclick="resetAdminMonthlyFilters()" class="btn btn-ghost btn-sm">Reset</button>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Month</th>
+                <th>Total Hours</th>
+                <th>Total Overtime</th>
+                <th>Days Worked</th>
+                <th>Last Sync</th>
+              </tr>
+            </thead>
+            <tbody id="monthlyTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 5: LEAVE REQUESTS -->
+      <div id="content-leaveTab" class="card hidden">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+          <h3 style="font-weight: 800; color: var(--slate-900); font-size: 0.875rem;">Employee Leave Applications</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Leave Details</th>
+                <th>Dates</th>
+                <th>Status</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leaveTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 6: STAFF PROFILES -->
+      <div id="content-usersTab" class="card hidden">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+          <h3 style="font-weight: 800; color: var(--slate-900); font-size: 0.875rem;">Employee Directory</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Work Status</th>
+                <th>Account Standing</th>
+                <th class="text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 7: TIMESHEET EXPORT -->
+      <div id="content-exportTab" class="card hidden">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+          <h3 style="font-weight: 800; color: var(--slate-900); font-size: 0.875rem;">Timesheet Export Engine</h3>
+          <p style="font-size: 0.75rem; color: var(--slate-500);">Generate and download standardized timesheet reports.
+          </p>
+        </div>
+        <div style="padding: 1.5rem;">
+          <form onsubmit="return false;" class="space-y" style="max-width: 48rem;">
+            <div class="grid-2 sm-grid-3" style="gap: 1rem;">
+              <div>
+                <label class="input-label">Select Employee</label>
+                <select id="exportEmail" class="input-field" style="font-size: 0.8125rem;"></select>
+              </div>
+              <div>
+                <label class="input-label">Start Date</label>
+                <input type="date" id="exportStart" required class="input-field" style="font-size: 0.8125rem;">
+              </div>
+              <div>
+                <label class="input-label">End Date</label>
+                <input type="date" id="exportEnd" required class="input-field" style="font-size: 0.8125rem;">
+              </div>
+            </div>
+            <div id="exportAlert" class="alert"></div>
+            <div class="flex flex-col sm-flex-row gap-3 mt-3">
+              <button type="button" onclick="handleExport('pdf')" class="btn btn-primary btn-md">📄 Export PDF</button>
+              <button type="button" onclick="handleExport('csv')" class="btn btn-secondary btn-md">📊 Export
+                CSV</button>
+              <button type="button" id="btnDownloadZip" onclick="requestZipExport()" class="btn btn-md"
+                style="background: var(--vuma-purple-accent); color: white; box-shadow: 0 4px 14px rgba(124,58,237,0.25);">
+                <span id="spinnerZip" class="spinner-ring hidden"
+                  style="width: 16px; height: 16px; border-width: 2px; margin: 0;"></span>
+                <span id="textZip">📦 Export ZIP</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- EDIT SUMMARY MODAL -->
+    <div id="editSummaryModal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="flex justify-between items-center mb-4">
+          <h3 style="font-size: 1rem; font-weight: 800; color: var(--slate-900);">⏱️ Edit Shift Times</h3>
+          <button onclick="closeSummaryEditModal()"
+            style="background: none; border: none; cursor: pointer; font-size: 1.25rem; color: var(--slate-400); font-weight: 800;">&times;</button>
+        </div>
+        <form onsubmit="handleSummaryUpdateSave(event)" class="space-y-sm">
+          <input type="hidden" id="editSumId">
+          <div
+            style="background: var(--slate-50); padding: 0.75rem; border-radius: 0.75rem; border: 1px solid var(--slate-200); font-size: 0.75rem; color: var(--slate-500); margin-bottom: 1rem;">
+            <span style="display: block; font-weight: 800; color: var(--slate-800);" id="editSumName"></span>
+            <span style="display: block;" id="editSumDate"></span>
+            <p style="margin-top: 0.5rem; font-size: 0.625rem; line-height: 1.4;">Editing will recalculate hours,
+              overtime, and sync weekly/monthly summaries.</p>
+          </div>
+          <div class="grid-2">
+            <div><label class="input-label">Clock In</label><input type="time" step="1" id="editSumIn"
+                class="input-field"></div>
+            <div><label class="input-label">Clock Out</label><input type="time" step="1" id="editSumOut"
+                class="input-field"></div>
+          </div>
+          <div class="grid-2 mt-3">
+            <button type="button" onclick="closeSummaryEditModal()" class="btn btn-ghost btn-md w-full">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-md w-full">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- LEAVE MODAL -->
+    <div id="leaveModal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="flex justify-between items-center mb-4">
+          <h3 style="font-size: 1rem; font-weight: 800; color: var(--slate-900);">📅 Register Leave Request</h3>
+          <button onclick="closeLeaveModal()"
+            style="background: none; border: none; cursor: pointer; font-size: 1.25rem; color: var(--slate-400); font-weight: 800;">&times;</button>
+        </div>
+        <form onsubmit="handleLeaveSubmit(event)" class="space-y-sm">
+          <div>
+            <label class="input-label">Leave Type</label>
+            <select id="leaveType" required class="input-field">
+              <option value="Annual">Annual Leave</option>
+              <option value="Sick">Sick Leave</option>
+              <option value="Family Responsibility">Family Responsibility Leave</option>
+              <option value="Unpaid">Unpaid Leave</option>
+            </select>
+          </div>
+          <div><label class="input-label">Start Date</label><input type="date" id="leaveStartDate" required
+              class="input-field"></div>
+          <div><label class="input-label">End Date</label><input type="date" id="leaveEndDate" required
+              class="input-field"></div>
+          <div class="grid-2 mt-3">
+            <button type="button" onclick="closeLeaveModal()" class="btn btn-ghost btn-md w-full">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-md w-full">Submit Request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- EDIT EMPLOYEE MODAL -->
+    <div id="editModal" class="modal-overlay">
+      <div class="modal-card">
+        <h3 style="font-size: 1rem; font-weight: 800; color: var(--slate-900); margin-bottom: 1rem;">Modify Employee
+          Profile</h3>
+        <form onsubmit="handleAdminUpdateSave(event)" class="space-y-sm">
+          <input type="hidden" id="editEmail">
+          <div><label class="input-label">First Name</label><input type="text" id="editFirst" required
+              class="input-field"></div>
+          <div><label class="input-label">Last Name</label><input type="text" id="editLast" required
+              class="input-field"></div>
+          <div>
+            <label class="input-label">Account Standing</label>
+            <select id="editStatus" class="input-field">
+              <option value="Verified">Verified</option>
+              <option value="Blocked">Blocked</option>
+            </select>
+          </div>
+          <div><label class="input-label" style="color: var(--vuma-magenta);">Reset Password (optional)</label><input
+              type="password" id="editPassword" placeholder="Enter new password" class="input-field"></div>
+          <div class="grid-2 mt-3">
+            <button type="button" onclick="closeEditModal()" class="btn btn-ghost btn-md w-full">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-md w-full">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ============================================================================
+    // GOOGLE APPS SCRIPT API CLIENT (For GitHub Pages)
+    // ============================================================================
+
+    // ⚠️ IMPORTANT: Replace this with your Google Apps Script Web App URL!
+    const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwWruO5BhX6LGfHK44Rfd8f9_861rHmnE52dJmuvq8VYAjVPGFZKPOy0skvI9qcKhW8hg/exec";
+
+    const ApiClient = {
+      async execute(methodName, args) {
+        if (APPS_SCRIPT_WEB_APP_URL.includes("YOUR_DEPLOYMENT_ID")) {
+          throw new Error("You must set the APPS_SCRIPT_WEB_APP_URL in Index.html to your actual Web App URL.");
+        }
+
+        const payload = JSON.stringify({ method: methodName, args: args });
+
+        // We use text/plain to avoid CORS preflight errors from Google Apps Script
+        const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: payload
+        });
+
+        if (!response.ok) {
+          throw new Error("Network request failed");
+        }
+
+        const result = await response.json();
+        return result;
+      }
+    };
+
+    // ============================================================================
+    // MOCK RUNNER OBJECT TO INTERCEPT CALLS
+    // ============================================================================
+    const MockRunner = {
+      _successFn: null,
+      _failFn: null,
+      withSuccessHandler(fn) { this._successFn = fn; return this; },
+      withFailureHandler(fn) { this._failFn = fn; return this; },
+      async _execute(methodName, args) {
+        try {
+          const result = await ApiClient.execute(methodName, args);
+          if (this._successFn) this._successFn(result);
+        } catch (err) {
+          if (this._failFn) this._failFn(err);
+        }
+      }
+    };
+
+    // List of backend functions we want to support
+    const backendMethods = [
+      "registerUser", "loginUser", "processActivityLog", "getAdminDashboardData",
+      "submitLeaveRequest", "adminUpdateLeaveStatus", "adminUpdateUser",
+      "adminDeleteDailySummary", "adminUpdateDailySummary", "exportTimesheetData",
+      "generateTimesheetsZip"
+    ];
+
+    // Dynamically bind ApiClient methods to MockRunner
+    backendMethods.forEach(method => {
+      MockRunner[method] = function (...args) {
+        this._execute(method, args);
+        return this;
+      };
+    });
+
+    // Provide the global google object
+    const google = {
+      script: {
+        get run() {
+          // Return a fresh runner instance so callbacks don't overwrite each other
+          return Object.assign({}, MockRunner);
+        }
+      }
+    };
+
+    let ACTIVE_SESSION_USER = null;
+    let CACHED_LOGS_ARRAY = [];
+    let CACHED_SUMMARIES_ARRAY = [];
+    let CACHED_WEEKLY_ARRAY = [];
+    let CACHED_MONTHLY_ARRAY = [];
+    let CACHED_LEAVE_ARRAY = [];
+
+    function showLoader(show, msg = "Processing...") {
+      const sp = document.getElementById("globalSpinner");
+      document.getElementById("spinnerMessage").innerText = msg;
+      if (show) sp.classList.add("active");
+      else sp.classList.remove("active");
+    }
+
+    function toggleAuthMode(toLogin) {
+      document.getElementById("authAlert").classList.remove("visible");
+      document.getElementById("authTitle").innerHTML = toLogin
+        ? 'VUMA <span style="font-weight:300;color:var(--vuma-magenta);">Logger</span>'
+        : 'Create <span style="font-weight:300;color:var(--vuma-magenta);">Account</span>';
+      document.getElementById("authSubtitle").innerText = toLogin
+        ? "Enter credentials to access the workforce portal."
+        : "Register to initiate attendance logging.";
+      document.getElementById("loginForm").classList.toggle("hidden", !toLogin);
+      document.getElementById("registerForm").classList.toggle("hidden", toLogin);
+    }
+
+    function showAlert(id, msg, isError) {
+      const el = document.getElementById(id);
+      el.innerText = msg;
+      el.className = `alert visible ${isError ? 'alert-error' : 'alert-success'}`;
+    }
+
+    function handleRegisterSubmit(e) {
+      e.preventDefault();
+      showLoader(true, "Registering profile...");
+      google.script.run
+        .withSuccessHandler(function (res) {
+          showLoader(false);
+          if (res.status === "success") {
+            toggleAuthMode(true);
+            showAlert("authAlert", res.message, false);
+            document.getElementById("registerForm").reset();
+          } else {
+            showAlert("authAlert", res.message, true);
+          }
+        })
+        .registerUser(
+          document.getElementById("regEmail").value,
+          document.getElementById("regFirst").value,
+          document.getElementById("regLast").value,
+          document.getElementById("regPassword").value
+        );
+    }
+
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      showLoader(true, "Verifying credentials...");
+      google.script.run
+        .withSuccessHandler(function (res) {
+          showLoader(false);
+          if (res.status === "success") {
+            ACTIVE_SESSION_USER = res.user;
+            document.getElementById("authView").classList.add("hidden");
+            document.getElementById("loginForm").reset();
+            const mc = document.getElementById("mainContainer");
+            if (res.accountType === "Admin") {
+              mc.classList.add("admin-wide");
+              loadAdminDashboard();
+            } else {
+              mc.classList.remove("admin-wide");
+              document.getElementById("employeeGreeting").innerText = `Welcome, ${res.user.firstName}!`;
+              document.getElementById("employeeView").classList.remove("hidden");
+            }
+          } else {
+            showAlert("authAlert", res.message, true);
+          }
+        })
+        .loginUser(document.getElementById("loginEmail").value, document.getElementById("loginPassword").value);
+    }
+
+    function logout() {
+      ACTIVE_SESSION_USER = null;
+      document.getElementById("adminView").classList.add("hidden");
+      document.getElementById("employeeView").classList.add("hidden");
+      document.getElementById("authView").classList.remove("hidden");
+      document.getElementById("mainContainer").classList.remove("admin-wide");
+      toggleAuthMode(true);
+    }
+
+    function triggerClockAction(actionType) {
+      document.getElementById("logAlert").className = "alert";
+      showLoader(true, "Querying device location...");
+      if (!navigator.geolocation) {
+        showLoader(false);
+        showAlert("logAlert", "GPS services are not supported by this browser.", true);
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        function (pos) {
+          showLoader(true, "Verifying telemetry coordinates...");
+          google.script.run
+            .withSuccessHandler(function (res) {
+              showLoader(false);
+              if (res.status === "success") {
+                showAlert("logAlert", `${res.action} recorded at ${res.time} at ${res.location}`, false);
+              } else {
+                showAlert("logAlert", res.message, true);
+              }
+            })
+            .processActivityLog(ACTIVE_SESSION_USER.email, ACTIVE_SESSION_USER.firstName, ACTIVE_SESSION_USER.lastName, actionType, pos.coords.latitude, pos.coords.longitude);
+        },
+        function () {
+          showLoader(false);
+          showAlert("logAlert", "GPS blocked: Please enable location settings.", true);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    function toggleAdminClockPanel() {
+      const panel = document.getElementById("adminSelfClockPanel");
+      const txt = document.getElementById("adminClockToggleText");
+      if (panel.classList.contains("hidden")) { panel.classList.remove("hidden"); txt.innerText = "Return to Dashboard View"; }
+      else { panel.classList.add("hidden"); txt.innerText = "Go to My Clock In / Out"; }
+    }
+
+    function triggerAdminClockAction(actionType) {
+      document.getElementById("adminLogAlert").className = "alert";
+      showLoader(true, "Querying device location...");
+      if (!navigator.geolocation) { showLoader(false); showAlert("adminLogAlert", "GPS not supported.", true); return; }
+      navigator.geolocation.getCurrentPosition(
+        function (pos) {
+          showLoader(true, "Verifying coordinates...");
+          google.script.run
+            .withSuccessHandler(function (res) {
+              showLoader(false);
+              if (res.status === "success") { showAlert("adminLogAlert", `${res.action} recorded at ${res.time} at ${res.location}`, false); loadAdminDashboard(); }
+              else { showAlert("adminLogAlert", res.message, true); }
+            })
+            .processActivityLog(ACTIVE_SESSION_USER.email, ACTIVE_SESSION_USER.firstName, ACTIVE_SESSION_USER.lastName, actionType, pos.coords.latitude, pos.coords.longitude);
+        },
+        function () { showLoader(false); showAlert("adminLogAlert", "GPS blocked.", true); },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    function openLeaveModal() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById("leaveStartDate").value = today;
+      document.getElementById("leaveEndDate").value = today;
+      document.getElementById("leaveModal").classList.add("active");
+    }
+    function closeLeaveModal() { document.getElementById("leaveModal").classList.remove("active"); }
+
+    function handleLeaveSubmit(e) {
+      e.preventDefault();
+      showLoader(true, "Submitting leave request...");
+      google.script.run
+        .withSuccessHandler(function (res) {
+          showLoader(false); closeLeaveModal();
+          if (res.status === "success") { alert(res.message); if (!document.getElementById("adminView").classList.contains("hidden")) loadAdminDashboard(); }
+          else { alert("Error: " + res.message); }
+        })
+        .submitLeaveRequest(ACTIVE_SESSION_USER.email, ACTIVE_SESSION_USER.firstName, ACTIVE_SESSION_USER.lastName,
+          document.getElementById("leaveType").value, document.getElementById("leaveStartDate").value, document.getElementById("leaveEndDate").value);
+    }
+
+    function loadAdminDashboard() {
+      showLoader(true, "Loading dashboard...");
+      google.script.run
+        .withFailureHandler(function (err) { showLoader(false); alert("Error: " + err.message); })
+        .withSuccessHandler(function (res) {
+          showLoader(false);
+          if (res.status === "success") {
+            document.getElementById("adminGreeting").innerText = `${ACTIVE_SESSION_USER.firstName}'s Portal`;
+            document.getElementById("adminView").classList.remove("hidden");
+
+            CACHED_LOGS_ARRAY = res.logs || [];
+            CACHED_SUMMARIES_ARRAY = res.summaries || [];
+            CACHED_WEEKLY_ARRAY = res.weeklySummaries || [];
+            CACHED_MONTHLY_ARRAY = res.monthlySummaries || [];
+            CACHED_LEAVE_ARRAY = res.leaveRequests || [];
+
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("filterDate").value = today;
+            document.getElementById("filterSummaryDate").value = today;
+            document.getElementById("filterMonthlyMonth").value = today.substring(0, 7);
+
+            renderStaffProfilesTable(res.employees);
+            renderLeaveRequestsTable(CACHED_LEAVE_ARRAY);
+
+            const sel = document.getElementById("exportEmail");
+            sel.innerHTML = "";
+            const optAll = document.createElement("option"); optAll.value = "ALL"; optAll.text = "All Employees (ZIP Only)"; sel.appendChild(optAll);
+            res.employees.forEach(emp => {
+              const opt = document.createElement("option"); opt.value = emp.email; opt.text = `${emp.firstName} ${emp.lastName} (${emp.email})`; sel.appendChild(opt);
+            });
+
+            applyAdminLogFilters();
+            applyAdminSummaryFilters();
+            applyAdminWeeklyFilters();
+            applyAdminMonthlyFilters();
+          } else { alert("Error: " + res.message); }
+        })
+        .getAdminDashboardData();
+    }
+
+    function switchAdminTab(tabName) {
+      const tabs = ['logsTab', 'summariesTab', 'weeklyTab', 'monthlyTab', 'leaveTab', 'usersTab', 'exportTab'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`btn-${t}`);
+        const content = document.getElementById(`content-${t}`);
+        if (t === tabName) { btn.classList.add("active"); content.classList.remove("hidden"); }
+        else { btn.classList.remove("active"); content.classList.add("hidden"); }
+      });
+    }
+
+    // ---- Export functions ----
+    function requestZipExport() {
+      const email = document.getElementById("exportEmail").value;
+      const startDate = document.getElementById("exportStart").value;
+      const endDate = document.getElementById("exportEnd").value;
+      const alertBox = document.getElementById("exportAlert");
+      if (!startDate || !endDate) { showExportAlert(alertBox, "Please select both dates.", true); return; }
+      if (new Date(startDate) > new Date(endDate)) { showExportAlert(alertBox, "Start cannot be after End.", true); return; }
+      alertBox.className = "alert";
+      document.getElementById("btnDownloadZip").style.opacity = "0.6";
+      document.getElementById("spinnerZip").classList.remove("hidden");
+      document.getElementById("textZip").innerText = "Compiling...";
+      google.script.run
+        .withFailureHandler(function (err) { resetZipBtn(); showExportAlert(alertBox, err.message, true); })
+        .withSuccessHandler(function (res) {
+          resetZipBtn();
+          if (res.status === "success") { triggerDownload(res.base64, res.mimeType, res.filename); showExportAlert(alertBox, "ZIP downloaded.", false); }
+          else { showExportAlert(alertBox, res.message, true); }
+        })
+        .generateTimesheetsZip(email, startDate, endDate);
+    }
+
+    function resetZipBtn() {
+      document.getElementById("btnDownloadZip").style.opacity = "1";
+      document.getElementById("spinnerZip").classList.add("hidden");
+      document.getElementById("textZip").innerText = "📦 Export ZIP";
+    }
+
+    function handleExport(format) {
+      const email = document.getElementById("exportEmail").value;
+      const startDate = document.getElementById("exportStart").value;
+      const endDate = document.getElementById("exportEnd").value;
+      const alertBox = document.getElementById("exportAlert");
+      if (email === "ALL") { showExportAlert(alertBox, "Select a specific employee for PDF/CSV.", true); return; }
+      if (!startDate || !endDate) { showExportAlert(alertBox, "Please select both dates.", true); return; }
+      if (new Date(startDate) > new Date(endDate)) { showExportAlert(alertBox, "Start cannot be after End.", true); return; }
+      alertBox.className = "alert";
+      showLoader(true, `Generating ${format.toUpperCase()}...`);
+      google.script.run
+        .withFailureHandler(function (err) { showLoader(false); showExportAlert(alertBox, err.message, true); })
+        .withSuccessHandler(function (res) {
+          showLoader(false);
+          if (res.status === "success") { triggerDownload(res.base64, res.mimeType, res.filename); showExportAlert(alertBox, `${format.toUpperCase()} exported!`, false); }
+          else { showExportAlert(alertBox, res.message, true); }
+        })
+        .exportTimesheetData(email, startDate, endDate, format);
+    }
+
+    function showExportAlert(el, text, isError) {
+      el.innerText = text;
+      el.className = `alert visible ${isError ? 'alert-error' : 'alert-success'}`;
+    }
+
+    function triggerDownload(base64Data, contentType, filename) {
+      const byteChars = atob(base64Data);
+      const byteArrays = [];
+      for (let i = 0; i < byteChars.length; i += 512) {
+        const slice = byteChars.slice(i, i + 512);
+        const nums = new Array(slice.length);
+        for (let j = 0; j < slice.length; j++) nums[j] = slice.charCodeAt(j);
+        byteArrays.push(new Uint8Array(nums));
+      }
+      const blob = new Blob(byteArrays, { type: contentType });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(link.href); }, 100);
+    }
+
+    // ---- Logs ----
+    function applyAdminLogFilters() {
+      const selectedDate = document.getElementById("filterDate").value.trim();
+      const searchQuery = document.getElementById("filterSearch").value.trim().toLowerCase();
+      let logins = 0, logouts = 0;
+      const filtered = CACHED_LOGS_ARRAY.filter(log => {
+        const matchDate = !selectedDate || log.date === selectedDate;
+        const fullName = `${log.firstName} ${log.lastName}`.toLowerCase();
+        const matchSearch = !searchQuery || fullName.includes(searchQuery) || log.email.toLowerCase().includes(searchQuery);
+        if (matchDate && matchSearch) {
+          if (log.action === "Clock In") logins++;
+          if (log.action === "Clock Out") logouts++;
+          return true;
+        }
+        return false;
+      });
+      document.getElementById("statLogins").innerText = logins;
+      document.getElementById("statLogouts").innerText = logouts;
+      document.getElementById("statDateDisplay").innerText = selectedDate || "All Time";
+      const body = document.getElementById("logsTableBody");
+      body.innerHTML = filtered.length === 0 ? '<tr><td colspan="5" style="padding:1rem;text-align:center;color:var(--slate-500);">No matching logs.</td></tr>' : "";
+      filtered.forEach(log => {
+        const row = document.createElement("tr");
+        const coords = (log.lat && log.lon) ? `<span class="font-mono badge badge-magenta mt-1" style="font-size:0.5625rem;">GPS: ${log.lat}, ${log.lon}</span>` : `<span class="font-mono" style="font-size:0.5625rem;color:var(--slate-400);">GPS: N/A</span>`;
+        const editedTag = log.editedBy ? `<span class="badge badge-purple mt-1" style="font-size:0.5625rem;">Edited: ${log.editedBy}</span>` : "";
+        row.innerHTML = `
+          <td><span style="font-weight:700;color:var(--slate-900);display:block;">${log.firstName} ${log.lastName}</span><span style="font-size:0.625rem;color:var(--slate-500);display:block;">${log.email}</span></td>
+          <td><span style="font-weight:500;color:var(--slate-800);display:block;">${log.date}</span><span style="font-size:0.625rem;color:var(--slate-500);display:block;">${log.time}</span></td>
+          <td><span class="badge ${log.action === 'Clock In' ? 'badge-magenta' : 'badge-orange'}">${log.action}</span></td>
+          <td style="font-size:0.75rem;line-height:1.5;word-break:break-word;"><div style="font-weight:500;color:var(--slate-800);">${log.location}</div>${coords}</td>
+          <td>${editedTag}</td>`;
+        body.appendChild(row);
+      });
+    }
+    function resetAdminLogFilters() { document.getElementById("filterDate").value = new Date().toISOString().split('T')[0]; document.getElementById("filterSearch").value = ""; applyAdminLogFilters(); }
+
+    // ---- Daily Summaries ----
+    function applyAdminSummaryFilters() {
+      const selectedDate = document.getElementById("filterSummaryDate").value.trim();
+      const searchQuery = document.getElementById("filterSummarySearch").value.trim().toLowerCase();
+      const filtered = CACHED_SUMMARIES_ARRAY.filter(s => {
+        const matchDate = !selectedDate || s.date === selectedDate;
+        const fullName = `${s.firstName} ${s.lastName}`.toLowerCase();
+        const matchSearch = !searchQuery || fullName.includes(searchQuery) || s.email.toLowerCase().includes(searchQuery);
+        return matchDate && matchSearch;
+      });
+      renderSummariesTable(filtered);
+    }
+    function resetAdminSummaryFilters() { document.getElementById("filterSummaryDate").value = new Date().toISOString().split('T')[0]; document.getElementById("filterSummarySearch").value = ""; applyAdminSummaryFilters(); }
+
+    function renderSummariesTable(data) {
+      const body = document.getElementById("summariesTableBody");
+      body.innerHTML = data.length === 0 ? '<tr><td colspan="8" style="padding:1rem;text-align:center;color:var(--slate-500);">No matching summaries.</td></tr>' : "";
+      data.forEach(sum => {
+        const row = document.createElement("tr");
+        const statusBadge = sum.status === "Completed" ? `<span class="badge badge-success">Completed</span>` : `<span class="badge badge-warning">In Progress</span>`;
+        const isOT = sum.overtime && sum.overtime !== "0 mins" && sum.overtime !== "N/A";
+        const otBadge = isOT ? `<span class="badge badge-purple">${sum.overtime}</span>` : `<span style="font-size:0.75rem;color:var(--slate-500);">${sum.overtime}</span>`;
+        row.innerHTML = `
+          <td><span style="font-weight:700;color:var(--slate-900);display:block;">${sum.firstName} ${sum.lastName}</span><span style="font-size:0.625rem;color:var(--slate-500);display:block;">${sum.email}</span></td>
+          <td style="font-weight:500;color:var(--slate-700);">${sum.date}</td>
+          <td><span style="font-size:0.75rem;color:var(--slate-800);display:block;">In: ${sum.clockIn}</span><span style="font-size:0.75rem;color:var(--slate-500);display:block;">Out: ${sum.clockOut}</span></td>
+          <td><span class="font-mono" style="font-size:0.75rem;color:var(--vuma-magenta);font-weight:600;display:block;">In: ${sum.floorIn}</span><span class="font-mono" style="font-size:0.75rem;color:#EA580C;font-weight:600;display:block;">Out: ${sum.floorOut}</span></td>
+          <td style="font-weight:600;color:var(--slate-900);">${sum.totalHours}</td>
+          <td>${otBadge}</td>
+          <td>${statusBadge}</td>
+          <td class="text-right" style="white-space:nowrap;">
+            <button onclick="openSummaryEditModal('${sum.summaryId}','${sum.firstName} ${sum.lastName}','${sum.date}','${sum.clockIn}','${sum.clockOut}')" class="btn btn-ghost btn-sm">Edit</button>
+            <button onclick="deleteDailySummary('${sum.summaryId}','${sum.date}','${sum.email}')" class="btn btn-danger btn-sm" style="margin-left:0.25rem;">Delete</button>
+          </td>`;
+        body.appendChild(row);
+      });
+    }
+
+    function formatTimeForInput(t) {
+      if (!t || t === "--" || t === "N/A") return "";
+      const p = t.split(":");
+      return p.length >= 2 ? `${p[0].padStart(2, '0')}:${p[1].padStart(2, '0')}:${p.length > 2 ? p[2].padStart(2, '0') : "00"}` : "";
+    }
+
+    function openSummaryEditModal(sumId, name, date, clockIn, clockOut) {
+      document.getElementById("editSumId").value = sumId;
+      document.getElementById("editSumName").innerText = name;
+      document.getElementById("editSumDate").innerText = "Date: " + date;
+      document.getElementById("editSumIn").value = formatTimeForInput(clockIn);
+      document.getElementById("editSumOut").value = formatTimeForInput(clockOut);
+      document.getElementById("editSummaryModal").classList.add("active");
+    }
+    function closeSummaryEditModal() { document.getElementById("editSummaryModal").classList.remove("active"); }
+
+    function handleSummaryUpdateSave(e) {
+      e.preventDefault();
+      showLoader(true, "Updating & syncing...");
+      google.script.run
+        .withSuccessHandler(function (res) {
+          showLoader(false); closeSummaryEditModal();
+          if (res.status === "success") loadAdminDashboard();
+          else alert("Error: " + res.message);
+        })
+        .adminUpdateDailySummary(document.getElementById("editSumId").value, document.getElementById("editSumIn").value, document.getElementById("editSumOut").value, ACTIVE_SESSION_USER.email);
+    }
+
+    function deleteDailySummary(summaryId, dateStr, email) {
+      if (!confirm("Delete this shift permanently? Activity logs for this day will also be removed.")) return;
+      showLoader(true, "Deleting shift...");
+      google.script.run
+        .withFailureHandler(function (err) { showLoader(false); alert("Error: " + err.message); })
+        .withSuccessHandler(function (res) {
+          showLoader(false);
+          if (res.status === "success") loadAdminDashboard();
+          else alert("Error: " + res.message);
+        })
+        .adminDeleteDailySummary(summaryId, dateStr, email, ACTIVE_SESSION_USER.email);
+    }
+
+    // ---- Weekly ----
+    function applyAdminWeeklyFilters() {
+      const wKey = document.getElementById("filterWeeklyKey").value.trim().toUpperCase();
+      const search = document.getElementById("filterWeeklySearch").value.trim().toLowerCase();
+      const filtered = CACHED_WEEKLY_ARRAY.filter(w => {
+        const matchWeek = !wKey || w.weekKey.toUpperCase().includes(wKey);
+        const fullName = `${w.firstName} ${w.lastName}`.toLowerCase();
+        const matchSearch = !search || fullName.includes(search) || w.email.toLowerCase().includes(search);
+        return matchWeek && matchSearch;
+      });
+      renderWeeklyTable(filtered);
+    }
+    function resetAdminWeeklyFilters() { document.getElementById("filterWeeklyKey").value = ""; document.getElementById("filterWeeklySearch").value = ""; applyAdminWeeklyFilters(); }
+
+    function renderWeeklyTable(data) {
+      const body = document.getElementById("weeklyTableBody");
+      body.innerHTML = data.length === 0 ? '<tr><td colspan="6" style="padding:1rem;text-align:center;color:var(--slate-500);">No matching weekly summaries.</td></tr>' : "";
+      data.forEach(w => {
+        const row = document.createElement("tr");
+        let compBadge = `<span class="badge badge-warning">Under Target</span>`;
+        if (w.complianceStatus.includes("MAX CAP")) compBadge = `<span class="badge badge-danger animate-pulse">🔴 MAX CAP (55+h)</span>`;
+        else if (w.complianceStatus.includes("Target Met")) compBadge = `<span class="badge badge-success">Target Met</span>`;
+        const isOT = w.totalOvertime && w.totalOvertime !== "0 mins" && w.totalOvertime !== "N/A";
+        const otBadge = isOT ? `<span class="badge badge-purple">${w.totalOvertime}</span>` : `<span style="font-size:0.75rem;color:var(--slate-500);">${w.totalOvertime}</span>`;
+        row.innerHTML = `
+          <td><span style="font-weight:700;color:var(--slate-900);display:block;">${w.firstName} ${w.lastName}</span><span style="font-size:0.625rem;color:var(--slate-500);display:block;">${w.email}</span></td>
+          <td class="font-mono" style="font-weight:600;color:var(--vuma-magenta);">${w.weekKey}</td>
+          <td style="font-weight:700;color:var(--slate-900);">${w.totalHours}</td>
+          <td>${otBadge}</td>
+          <td style="font-weight:600;color:var(--slate-700);">${w.daysWorked} days</td>
+          <td>${compBadge}</td>`;
+        body.appendChild(row);
+      });
+    }
+
+    // ---- Monthly ----
+    function applyAdminMonthlyFilters() {
+      const month = document.getElementById("filterMonthlyMonth").value.trim();
+      const search = document.getElementById("filterMonthlySearch").value.trim().toLowerCase();
+      const filtered = CACHED_MONTHLY_ARRAY.filter(m => {
+        const matchMonth = !month || m.month === month;
+        const fullName = `${m.firstName} ${m.lastName}`.toLowerCase();
+        const matchSearch = !search || fullName.includes(search) || m.email.toLowerCase().includes(search);
+        return matchMonth && matchSearch;
+      });
+      renderMonthlyTable(filtered);
+    }
+    function resetAdminMonthlyFilters() { document.getElementById("filterMonthlyMonth").value = ""; document.getElementById("filterMonthlySearch").value = ""; applyAdminMonthlyFilters(); }
+
+    function renderMonthlyTable(data) {
+      const body = document.getElementById("monthlyTableBody");
+      body.innerHTML = data.length === 0 ? '<tr><td colspan="6" style="padding:1rem;text-align:center;color:var(--slate-500);">No matching monthly summaries.</td></tr>' : "";
+      data.forEach(m => {
+        const row = document.createElement("tr");
+        const isOT = m.totalOvertime && m.totalOvertime !== "0 mins" && m.totalOvertime !== "N/A";
+        const otBadge = isOT ? `<span class="badge badge-purple">${m.totalOvertime}</span>` : `<span style="font-size:0.75rem;color:var(--slate-500);">${m.totalOvertime}</span>`;
+        row.innerHTML = `
+          <td><span style="font-weight:700;color:var(--slate-900);display:block;">${m.firstName} ${m.lastName}</span><span style="font-size:0.625rem;color:var(--slate-500);display:block;">${m.email}</span></td>
+          <td style="font-weight:600;color:var(--vuma-magenta);">${m.month}</td>
+          <td style="font-weight:700;color:var(--slate-900);">${m.totalHours}</td>
+          <td>${otBadge}</td>
+          <td style="font-weight:600;color:#059669;">${m.daysWorked} days</td>
+          <td class="font-mono" style="font-size:0.75rem;color:var(--slate-400);">${m.lastUpdated}</td>`;
+        body.appendChild(row);
+      });
+    }
+
+    // ---- Leave ----
+    function renderLeaveRequestsTable(requests) {
+      const body = document.getElementById("leaveTableBody");
+      body.innerHTML = requests.length === 0 ? '<tr><td colspan="5" style="padding:1rem;text-align:center;color:var(--slate-500);">No leave applications on record.</td></tr>' : "";
+      requests.forEach(req => {
+        const row = document.createElement("tr");
+        let statusClass = "badge-warning";
+        if (req.status === "Approved") statusClass = "badge-success";
+        if (req.status === "Rejected") statusClass = "badge-danger";
+        const actions = req.status === "Pending" ? `
+          <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
+            <button onclick="handleLeaveAction('${req.reqId}','Approved')" class="btn btn-success btn-sm">Approve</button>
+            <button onclick="handleLeaveAction('${req.reqId}','Rejected')" class="btn btn-danger btn-sm">Reject</button>
+          </div>
+        ` : `<span style="font-size:0.75rem;color:var(--slate-500);font-style:italic;display:block;text-align:right;">Resolved</span>`;
+        row.innerHTML = `
+          <td><span style="font-weight:700;color:var(--slate-900);display:block;">${req.firstName} ${req.lastName}</span><span style="font-size:0.625rem;color:var(--slate-500);display:block;">${req.email}</span></td>
+          <td style="font-weight:600;color:var(--slate-800);">${req.type} Leave</td>
+          <td style="font-size:0.75rem;color:var(--slate-700);"><span style="display:block;font-weight:500;">${req.startDate} to</span><span style="display:block;color:var(--slate-500);">${req.endDate}</span></td>
+          <td><span class="badge ${statusClass}">${req.status}</span></td>
+          <td class="text-right">${actions}</td>`;
+        body.appendChild(row);
+      });
+    }
+
+    function handleLeaveAction(reqId, newStatus) {
+      showLoader(true, "Updating leave status...");
+      google.script.run
+        .withSuccessHandler(function (res) {
+          showLoader(false);
+          if (res.status === "success") loadAdminDashboard();
+          else alert("Error: " + res.message);
+        })
+        .adminUpdateLeaveStatus(reqId, newStatus);
+    }
+
+    // ---- Staff Profiles ----
+    function renderStaffProfilesTable(employees) {
+      const body = document.getElementById("usersTableBody");
+      body.innerHTML = employees.length === 0 ? '<tr><td colspan="4" style="padding:1rem;text-align:center;color:var(--slate-500);">No employee profiles found.</td></tr>' : "";
+      employees.forEach(emp => {
+        const row = document.createElement("tr");
+        const workBadge = emp.workStatus === "On Leave" ? `<span class="badge badge-warning">On Leave</span>` : `<span class="badge badge-success">Active</span>`;
+        const standBadge = emp.accountStanding === "Verified" ? `<span class="badge badge-magenta">Verified</span>` : `<span class="badge badge-danger">Blocked</span>`;
+        row.innerHTML = `
+          <td><span style="font-weight:700;color:var(--slate-900);display:block;">${emp.firstName} ${emp.lastName}</span><span style="font-size:0.625rem;color:var(--slate-500);display:block;">${emp.email}</span></td>
+          <td>${workBadge}</td>
+          <td>${standBadge}</td>
+          <td class="text-right"><button onclick="openEditModal('${emp.email}','${emp.firstName}','${emp.lastName}','${emp.accountStanding}')" class="btn btn-ghost btn-sm">Edit</button></td>`;
+        body.appendChild(row);
+      });
+    }
+
+    function openEditModal(email, first, last, status) {
+      document.getElementById("editEmail").value = email;
+      document.getElementById("editFirst").value = first;
+      document.getElementById("editLast").value = last;
+      document.getElementById("editStatus").value = status;
+      document.getElementById("editPassword").value = "";
+      document.getElementById("editModal").classList.add("active");
+    }
+    function closeEditModal() { document.getElementById("editModal").classList.remove("active"); }
+
+    function handleAdminUpdateSave(e) {
+      e.preventDefault();
+      showLoader(true, "Updating profile...");
+      google.script.run
+        .withSuccessHandler(function (res) {
+          showLoader(false); closeEditModal();
+          if (res.status === "success") loadAdminDashboard();
+          else alert("Error: " + res.message);
+        })
+        .adminUpdateUser(document.getElementById("editEmail").value, document.getElementById("editFirst").value, document.getElementById("editLast").value, document.getElementById("editStatus").value, document.getElementById("editPassword").value);
+    }
+  </script>
+</body>
+
+</html>
