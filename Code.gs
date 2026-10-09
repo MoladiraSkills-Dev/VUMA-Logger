@@ -1311,9 +1311,10 @@ function adminUpdateUser(targetEmail, updatedFirst, updatedLast, updatedStatus, 
 /* ==========================================================================
    HTTP API ENDPOINT (For GitHub Pages integration)
    ========================================================================== */
-function doPost(e) {
+function handleApiRequest(payloadStr, callbackName) {
+  let resultJSON = "";
   try {
-    const payload = JSON.parse(e.postData.contents);
+    const payload = JSON.parse(payloadStr);
     const method = payload.method;
     const args = payload.args || [];
     let result = {};
@@ -1332,9 +1333,29 @@ function doPost(e) {
       case "exportTimesheetData": result = exportTimesheetData(...args); break;
       default: result = { status: "error", message: "Unknown method: " + method };
     }
-
-    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+    resultJSON = JSON.stringify(result);
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+    resultJSON = JSON.stringify({ status: "error", message: err.toString() });
   }
+
+  // If a JSONP callback is provided, return Javascript. Otherwise, return JSON.
+  if (callbackName) {
+    return ContentService.createTextOutput(callbackName + "(" + resultJSON + ");").setMimeType(ContentService.MimeType.JAVASCRIPT);
+  } else {
+    return ContentService.createTextOutput(resultJSON).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doPost(e) {
+  return handleApiRequest(e.postData.contents, null);
+}
+
+function doGet(e) {
+  // GET requests are much more reliable for CORS in Google Apps Script.
+  // The payload is passed as a URL encoded query parameter: ?payload={"method":"..."}
+  if (!e.parameter.payload) {
+    // If accessed directly in browser, serve the Index.html
+    return HtmlService.createHtmlOutputFromFile('Index').setTitle('VUMA Logger').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+  return handleApiRequest(e.parameter.payload, e.parameter.callback);
 }

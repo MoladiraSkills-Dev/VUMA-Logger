@@ -1255,26 +1255,36 @@
     const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwWruO5BhX6LGfHK44Rfd8f9_861rHmnE52dJmuvq8VYAjVPGFZKPOy0skvI9qcKhW8hg/exec";
 
     const ApiClient = {
-      async execute(methodName, args) {
-        if (APPS_SCRIPT_WEB_APP_URL.includes("YOUR_DEPLOYMENT_ID")) {
-          throw new Error("You must set the APPS_SCRIPT_WEB_APP_URL in Index.html to your actual Web App URL.");
-        }
+      execute(methodName, args) {
+        return new Promise((resolve, reject) => {
+          if (APPS_SCRIPT_WEB_APP_URL.includes("YOUR_DEPLOYMENT_ID")) {
+            return reject(new Error("You must set the APPS_SCRIPT_WEB_APP_URL in Index.html to your actual Web App URL."));
+          }
 
-        const payload = JSON.stringify({ method: methodName, args: args });
+          const payload = JSON.stringify({ method: methodName, args: args });
+          // Generate a unique callback function name for JSONP
+          const callbackName = "jsonp_callback_" + Math.round(1000000 * Math.random());
+          
+          const targetUrl = APPS_SCRIPT_WEB_APP_URL + "?payload=" + encodeURIComponent(payload) + "&callback=" + callbackName;
 
-        // We use text/plain to avoid CORS preflight errors from Google Apps Script
-        const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: payload
+          // Define the callback function globally so the script can execute it
+          window[callbackName] = function(data) {
+            delete window[callbackName]; // Cleanup
+            document.body.removeChild(script); // Cleanup
+            resolve(data);
+          };
+
+          // Create a script tag to bypass CORS (JSONP)
+          const script = document.createElement("script");
+          script.src = targetUrl;
+          script.onerror = () => {
+            delete window[callbackName];
+            document.body.removeChild(script);
+            reject(new Error("Network request failed (JSONP blocked or network error)"));
+          };
+          
+          document.body.appendChild(script);
         });
-
-        if (!response.ok) {
-          throw new Error("Network request failed");
-        }
-
-        const result = await response.json();
-        return result;
       }
     };
 
