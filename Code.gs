@@ -1347,7 +1347,9 @@ function handleApiRequest(payloadStr, callbackName) {
 }
 
 function doPost(e) {
-  return handleApiRequest(e.postData.contents, null);
+  // Use e.parameter.payload so that it works perfectly with application/x-www-form-urlencoded 
+  // This avoids CORS preflight requests entirely and is secure.
+  return handleApiRequest(e.parameter.payload, null);
 }
 
 function doGet(e) {
