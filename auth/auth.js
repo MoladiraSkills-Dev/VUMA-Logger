@@ -53,10 +53,15 @@ function handleLoginSubmit(e) {
   e.preventDefault();
   showLoader(true, "Verifying credentials...");
   google.script.run
+    .withFailureHandler(function (err) {
+      showLoader(false);
+      showAlert("authAlert", "Connection error: " + err.message, true);
+    })
     .withSuccessHandler(function (res) {
       if (res.status === "success") {
-        saveSession(res.user, res.accountType);
-        window.location.href = res.accountType === "Admin" ? ADMIN_PAGE : EMPLOYEE_PAGE;
+        saveSession(res.user, res.accountType, res.dashboardData || null);
+        showLoader(true, "Opening portal...");
+        window.location.replace(res.accountType === "Admin" ? ADMIN_PAGE : EMPLOYEE_PAGE);
       } else {
         showLoader(false);
         showAlert("authAlert", res.message, true);

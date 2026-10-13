@@ -13,8 +13,30 @@ let CACHED_LEAVE_ARRAY = [];
 
 (function initAdminPage() {
   if (!requireSession("Admin", LOGIN_URL)) return;
-  loadAdminDashboard();
+  document.getElementById("adminGreeting").innerText = `${ACTIVE_SESSION_USER.firstName}'s Portal`;
+  document.getElementById("adminView").classList.remove("hidden");
+
+  const cached = getCachedDashboardData();
+  if (cached) {
+    applyAdminDashboardData(cached);
+    // Refresh quietly in the background without blocking the UI
+    loadAdminDashboard(false);
+  } else {
+    showTableSkeletons();
+    loadAdminDashboard(false);
+  }
 })();
+
+function showTableSkeletons() {
+  const loadingRow = (cols, text) => `<tr><td colspan="${cols}" style="padding: 2.5rem 1rem; text-align: center; color: var(--slate-500);"><div class="spinner-ring" style="width: 22px; height: 22px; margin: 0 auto 0.75rem auto; border-width: 2px;"></div>${text}</td></tr>`;
+  const setEl = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  setEl("logsTableBody", loadingRow(5, "Loading activity logs..."));
+  setEl("summariesTableBody", loadingRow(8, "Loading daily summaries..."));
+  setEl("weeklyTableBody", loadingRow(7, "Loading weekly summaries..."));
+  setEl("monthlyTableBody", loadingRow(7, "Loading monthly summaries..."));
+  setEl("leaveTableBody", loadingRow(7, "Loading leave requests..."));
+  setEl("staffTableBody", loadingRow(5, "Loading staff profiles..."));
+}
 
 function toggleAdminClockPanel() {
   const panel = document.getElementById("adminSelfClockPanel");
@@ -33,7 +55,7 @@ function triggerAdminClockAction(actionType) {
       google.script.run
         .withSuccessHandler(function (res) {
           showLoader(false);
-          if (res.status === "success") { showAlert("adminLogAlert", `${res.action} recorded at ${res.time} at ${res.location}`, false); loadAdminDashboard(); }
+          if (res.status === "success") { showAlert("adminLogAlert", `${res.action} recorded at ${res.time} at ${res.location}`, false); loadAdminDashboard(false); }
           else { showAlert("adminLogAlert", res.message, true); }
         })
         .processActivityLog(ACTIVE_SESSION_USER.email, ACTIVE_SESSION_USER.firstName, ACTIVE_SESSION_USER.lastName, actionType, pos.coords.latitude, pos.coords.longitude);
@@ -43,42 +65,52 @@ function triggerAdminClockAction(actionType) {
   );
 }
 
-function loadAdminDashboard() {
-  showLoader(true, "Loading dashboard...");
+function applyAdminDashboardData(res) {
+  document.getElementById("adminGreeting").innerText = `${ACTIVE_SESSION_USER.firstName}'s Portal`;
+  document.getElementById("adminView").classList.remove("hidden");
+
+  CACHED_LOGS_ARRAY = res.logs || [];
+  CACHED_SUMMARIES_ARRAY = res.summaries || [];
+  CACHED_WEEKLY_ARRAY = res.weeklySummaries || [];
+  CACHED_MONTHLY_ARRAY = res.monthlySummaries || [];
+  CACHED_LEAVE_ARRAY = res.leaveRequests || [];
+
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById("filterDate").value = today;
+  document.getElementById("filterSummaryDate").value = today;
+  document.getElementById("filterMonthlyMonth").value = today.substring(0, 7);
+
+  renderStaffProfilesTable(res.employees || []);
+  renderLeaveRequestsTable(CACHED_LEAVE_ARRAY);
+
+  const sel = document.getElementById("exportEmail");
+  sel.innerHTML = "";
+  const optAll = document.createElement("option"); optAll.value = "ALL"; optAll.text = "All Employees (ZIP Only)"; sel.appendChild(optAll);
+  (res.employees || []).forEach(emp => {
+    const opt = document.createElement("option"); opt.value = emp.email; opt.text = `${emp.firstName} ${emp.lastName} (${emp.email})`; sel.appendChild(opt);
+  });
+
+  applyAdminLogFilters();
+  applyAdminSummaryFilters();
+  applyAdminWeeklyFilters();
+  applyAdminMonthlyFilters();
+}
+
+function loadAdminDashboard(showSpinner = true) {
+  if (showSpinner) showLoader(true, "Loading dashboard...");
   google.script.run
-    .withFailureHandler(function (err) { showLoader(false); alert("Error: " + err.message); })
+    .withFailureHandler(function (err) { 
+      if (showSpinner) showLoader(false); 
+      console.error("Dashboard error:", err); 
+    })
     .withSuccessHandler(function (res) {
-      showLoader(false);
+      if (showSpinner) showLoader(false);
       if (res.status === "success") {
-        document.getElementById("adminGreeting").innerText = `${ACTIVE_SESSION_USER.firstName}'s Portal`;
-        document.getElementById("adminView").classList.remove("hidden");
-
-        CACHED_LOGS_ARRAY = res.logs || [];
-        CACHED_SUMMARIES_ARRAY = res.summaries || [];
-        CACHED_WEEKLY_ARRAY = res.weeklySummaries || [];
-        CACHED_MONTHLY_ARRAY = res.monthlySummaries || [];
-        CACHED_LEAVE_ARRAY = res.leaveRequests || [];
-
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById("filterDate").value = today;
-        document.getElementById("filterSummaryDate").value = today;
-        document.getElementById("filterMonthlyMonth").value = today.substring(0, 7);
-
-        renderStaffProfilesTable(res.employees);
-        renderLeaveRequestsTable(CACHED_LEAVE_ARRAY);
-
-        const sel = document.getElementById("exportEmail");
-        sel.innerHTML = "";
-        const optAll = document.createElement("option"); optAll.value = "ALL"; optAll.text = "All Employees (ZIP Only)"; sel.appendChild(optAll);
-        res.employees.forEach(emp => {
-          const opt = document.createElement("option"); opt.value = emp.email; opt.text = `${emp.firstName} ${emp.lastName} (${emp.email})`; sel.appendChild(opt);
-        });
-
-        applyAdminLogFilters();
-        applyAdminSummaryFilters();
-        applyAdminWeeklyFilters();
-        applyAdminMonthlyFilters();
-      } else { alert("Error: " + res.message); }
+        updateCachedDashboardData(res);
+        applyAdminDashboardData(res);
+      } else if (showSpinner) { 
+        alert("Error: " + res.message); 
+      }
     })
     .getAdminDashboardData();
 }

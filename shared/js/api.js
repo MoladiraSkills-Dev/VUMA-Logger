@@ -84,15 +84,39 @@ const google = {
 // SESSION (persists across the login -> employee/admin page navigation)
 // ============================================================================
 const SESSION_KEY = "vumaLoggerSession";
+const DASHBOARD_CACHE_KEY = "vumaLoggerAdminCache";
 let ACTIVE_SESSION_USER = null;
 
-function saveSession(user, accountType) {
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user: user, accountType: accountType }));
+function saveSession(user, accountType, dashboardData = null) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ 
+    user: user, 
+    accountType: accountType 
+  }));
+  if (dashboardData) {
+    try {
+      localStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify(dashboardData));
+    } catch (e) {}
+  }
 }
 
 function getSession() {
   try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); }
   catch (e) { return null; }
+}
+
+function getCachedDashboardData() {
+  try {
+    const raw = localStorage.getItem(DASHBOARD_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function updateCachedDashboardData(data) {
+  try {
+    localStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify(data));
+  } catch (e) {}
 }
 
 /**
@@ -115,7 +139,8 @@ function requireSession(requiredRole, loginUrl) {
 function logout(loginUrl) {
   ACTIVE_SESSION_USER = null;
   sessionStorage.removeItem(SESSION_KEY);
-  window.location.href = loginUrl;
+  try { localStorage.removeItem(DASHBOARD_CACHE_KEY); } catch (e) {}
+  window.location.replace(loginUrl);
 }
 
 // ============================================================================
