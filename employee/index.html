@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="VUMA Logger employee portal - clock in, clock out and request leave.">
+  <title>VUMA Logger - Employee Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../shared/css/base.css">
+  <link rel="stylesheet" href="employee.css">
+</head>
+
+<body>
+  <!-- GLOBAL SPINNER -->
+  <div id="globalSpinner" class="global-spinner-overlay">
+    <div class="spinner-ring"></div>
+    <p class="spinner-msg" id="spinnerMessage">Processing request...</p>
+  </div>
+
+  <main id="mainContainer" class="main-container">
+
+    <!-- ===== EMPLOYEE PORTAL VIEW ===== -->
+    <section id="employeeView" class="card animate-in" style="margin-top: 1.5rem; padding: 1.5rem;">
+      <div class="text-center"
+        style="border-bottom: 1px solid var(--slate-100); padding-bottom: 1.25rem; margin-bottom: 1.5rem;">
+        <span class="badge badge-magenta mb-2" style="font-size: 0.625rem;">Session Active</span>
+        <h1 style="font-size: 1.25rem; font-weight: 800; color: var(--slate-900); margin-bottom: 0.25rem;"
+          id="employeeGreeting">Welcome!</h1>
+        <button onclick="logout(LOGIN_URL)" class="btn btn-ghost btn-sm mt-3">Logout Session</button>
+      </div>
+
+      <div id="logAlert" class="alert mb-4"></div>
+
+      <p
+        style="font-size: 0.75rem; color: var(--slate-500); margin-bottom: 1.5rem; text-align: center; line-height: 1.5;">
+        Your location settings are critical for attendance logging. Ensure browser location permission is authorized.
+      </p>
+
+      <div class="flex flex-col gap-3 mb-4">
+        <button onclick="triggerClockAction('Clock In')" class="clock-btn clock-btn-in">
+          <div class="flex items-center gap-3"><span class="icon">⏰</span><span class="label">Clock In</span></div>
+          <span class="arrow">➔</span>
+        </button>
+        <button onclick="triggerClockAction('Clock Out')" class="clock-btn clock-btn-out">
+          <div class="flex items-center gap-3"><span class="icon">🚪</span><span class="label">Clock Out</span></div>
+          <span class="arrow">➔</span>
+        </button>
+      </div>
+
+      <button onclick="openLeaveModal()" class="btn btn-ghost btn-full btn-md" style="gap: 0.375rem;">
+        <span>📅</span> Request Leave
+      </button>
+    </section>
+
+    <!-- LEAVE MODAL -->
+    <div id="leaveModal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="flex justify-between items-center mb-4">
+          <h3 style="font-size: 1rem; font-weight: 800; color: var(--slate-900);">📅 Register Leave Request</h3>
+          <button onclick="closeLeaveModal()"
+            style="background: none; border: none; cursor: pointer; font-size: 1.25rem; color: var(--slate-400); font-weight: 800;">&times;</button>
+        </div>
+        <form onsubmit="handleLeaveSubmit(event)" class="space-y-sm">
+          <div>
+            <label class="input-label">Leave Type</label>
+            <select id="leaveType" required class="input-field">
+              <option value="Annual">Annual Leave</option>
+              <option value="Sick">Sick Leave</option>
+              <option value="Family Responsibility">Family Responsibility Leave</option>
+              <option value="Unpaid">Unpaid Leave</option>
+            </select>
+          </div>
+          <div><label class="input-label">Start Date</label><input type="date" id="leaveStartDate" required
+              class="input-field"></div>
+          <div><label class="input-label">End Date</label><input type="date" id="leaveEndDate" required
+              class="input-field"></div>
+          <div class="grid-2 mt-3">
+            <button type="button" onclick="closeLeaveModal()" class="btn btn-ghost btn-md w-full">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-md w-full">Submit Request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="../shared/js/api.js"></script>
+  <script src="../shared/js/leave.js"></script>
+  <script src="employee.js"></script>
+</body>
+
+</html>

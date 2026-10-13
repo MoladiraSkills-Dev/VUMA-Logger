@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="VUMA Logger admin dashboard - attendance logs, summaries, leave, staff and timesheet exports.">
+  <title>VUMA Logger - Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../shared/css/base.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+  <!-- GLOBAL SPINNER -->
+  <div id="globalSpinner" class="global-spinner-overlay">
+    <div class="spinner-ring"></div>
+    <p class="spinner-msg" id="spinnerMessage">Processing request...</p>
+  </div>
+
+  <main id="mainContainer" class="main-container admin-wide">
+
+    <!-- ===== ADMIN DASHBOARD VIEW ===== -->
+    <section id="adminView" class="hidden space-y" style="margin-top: 1rem;">
+      <!-- Header -->
+      <div class="card" style="padding: 1.25rem;">
+        <div class="flex flex-col sm-flex-row justify-between items-center gap-3" style="flex-wrap: wrap;">
+          <div>
+            <span class="badge badge-magenta" style="font-size: 0.5625rem;">VUMA Admin</span>
+            <h1 style="font-size: 1.25rem; font-weight: 900; color: var(--slate-900); margin-top: 0.25rem;"
+              id="adminGreeting">Manager Dashboard</h1>
+            <button onclick="toggleAdminClockPanel()" class="btn btn-ghost btn-sm mt-2">
+              <span>⏰</span><span id="adminClockToggleText">Go to My Clock In / Out</span>
+            </button>
+          </div>
+          <button onclick="logout(LOGIN_URL)" class="btn btn-danger btn-sm">Exit</button>
+        </div>
+      </div>
+
+      <!-- Admin Self Clock Panel -->
+      <div id="adminSelfClockPanel" class="card hidden" style="max-width: 30rem; margin: 0 auto; padding: 1.5rem;">
+        <div class="text-center mb-4">
+          <h2 style="font-size: 1.125rem; font-weight: 800; color: var(--slate-900);">Admin Attendance Logging</h2>
+          <p style="font-size: 0.75rem; color: var(--slate-500); margin-top: 0.25rem;">Record your daily attendance
+            directly.</p>
+        </div>
+        <div id="adminLogAlert" class="alert mb-4"></div>
+        <div class="grid-2 mb-4">
+          <button onclick="triggerAdminClockAction('Clock In')" class="btn btn-primary btn-md" style="width: 100%;">⏰
+            Clock In</button>
+          <button onclick="triggerAdminClockAction('Clock Out')" class="btn btn-md"
+            style="width: 100%; background: linear-gradient(135deg, #EA580C, #C2410C); color: white; box-shadow: 0 4px 14px rgba(234,88,12,0.25);">🚪
+            Clock Out</button>
+        </div>
+        <button onclick="openLeaveModal()" class="btn btn-ghost btn-full btn-sm">📅 Register Leave</button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="tab-bar">
+        <button onclick="switchAdminTab('logsTab')" id="btn-logsTab" class="tab-btn active">Activity Logs</button>
+        <button onclick="switchAdminTab('summariesTab')" id="btn-summariesTab" class="tab-btn">Daily Summaries</button>
+        <button onclick="switchAdminTab('weeklyTab')" id="btn-weeklyTab" class="tab-btn">Weekly</button>
+        <button onclick="switchAdminTab('monthlyTab')" id="btn-monthlyTab" class="tab-btn">Monthly</button>
+        <button onclick="switchAdminTab('leaveTab')" id="btn-leaveTab" class="tab-btn">Leave</button>
+        <button onclick="switchAdminTab('usersTab')" id="btn-usersTab" class="tab-btn">Staff</button>
+        <button onclick="switchAdminTab('exportTab')" id="btn-exportTab" class="tab-btn">Export</button>
+      </div>
+
+      <!-- TAB 1: ACTIVITY LOGS -->
+      <div id="content-logsTab" class="card">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+          <div class="flex flex-col xl-flex-row justify-between items-center gap-3" style="flex-wrap: wrap;">
+            <div class="flex items-center gap-3" style="flex-wrap: wrap;">
+              <h3 style="font-weight: 800; color: var(--slate-900); font-size: 0.875rem;">Telemetry Activity Logs</h3>
+              <div class="stat-widget">
+                <div class="stat-item"><span class="ping-dot magenta"></span><span
+                    class="stat-label">Logins:</span><span class="stat-value-magenta" id="statLogins">0</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat-item"><span class="ping-dot orange"></span><span
+                    class="stat-label">Logouts:</span><span class="stat-value-orange" id="statLogouts">0</span></div>
+                <span class="font-mono" style="font-size: 0.5625rem; color: var(--slate-400); margin-left: 0.5rem;"
+                  id="statDateDisplay">Today</span>
+              </div>
+            </div>
+            <div class="flex flex-col sm-flex-row gap-2 w-full xl-w-auto">
+              <input type="date" id="filterDate" onchange="applyAdminLogFilters()" class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">
+              <input type="text" id="filterSearch" oninput="applyAdminLogFilters()"
+                placeholder="Search staff name/email..." class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem; min-width: 200px;">
+              <button onclick="resetAdminLogFilters()" class="btn btn-ghost btn-sm">Reset</button>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Staff</th>
+                <th>Time</th>
+                <th>Action</th>
+                <th style="min-width: 250px;">Resolved Location &amp; Coordinates</th>
+                <th>Edited By</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 2: DAILY SUMMARIES -->
+      <div id="content-summariesTab" class="card hidden">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+          <div class="flex flex-col sm-flex-row justify-between items-center gap-3" style="flex-wrap: wrap;">
+            <h3 style="font-weight: 800; color: var(--slate-900); font-size: 0.875rem;">Daily Shift Summaries</h3>
+            <div class="flex flex-col sm-flex-row gap-2 w-full sm-w-auto">
+              <input type="date" id="filterSummaryDate" onchange="applyAdminSummaryFilters()" class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">
+              <input type="text" id="filterSummarySearch" oninput="applyAdminSummaryFilters()"
+                placeholder="Search staff..." class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem; min-width: 200px;">
+              <button onclick="resetAdminSummaryFilters()" class="btn btn-ghost btn-sm">Reset</button>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Date</th>
+                <th>Actual Times</th>
+                <th>Floor Times</th>
+                <th>Net Hours</th>
+                <th>Overtime</th>
+                <th>Status</th>
+                <th class="text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="summariesTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 3: WEEKLY SUMMARIES -->
+      <div id="content-weeklyTab" class="card hidden">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+          <div class="flex flex-col sm-flex-row justify-between items-center gap-3" style="flex-wrap: wrap;">
+            <div>
+              <h3 style="font-weight: 800; color: var(--slate-900); font-size: 0.875rem;">Weekly Work Summaries</h3>
+              <span class="badge badge-navy mt-1">Min: 45h | Max: 55h</span>
+            </div>
+            <div class="flex flex-col sm-flex-row gap-2 w-full sm-w-auto">
+              <input type="text" id="filterWeeklyKey" oninput="applyAdminWeeklyFilters()"
+                placeholder="Week e.g. 2026-W30" class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">
+              <input type="text" id="filterWeeklySearch" oninput="applyAdminWeeklyFilters()"
+                placeholder="Search staff..." class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem; min-width: 200px;">
+              <button onclick="resetAdminWeeklyFilters()" class="btn btn-ghost btn-sm">Reset</button>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Week</th>
+                <th>Total Hours</th>
+                <th>Total Overtime</th>
+                <th>Days Worked</th>
+                <th>Compliance</th>
+              </tr>
+            </thead>
+            <tbody id="weeklyTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 4: MONTHLY SUMMARIES -->
+      <div id="content-monthlyTab" class="card hidden">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+          <div class="flex flex-col sm-flex-row justify-between items-center gap-3" style="flex-wrap: wrap;">
+            <h3 style="font-weight: 800; color: var(--slate-900); font-size: 0.875rem;">Monthly Work Summaries</h3>
+            <div class="flex flex-col sm-flex-row gap-2 w-full sm-w-auto">
+              <input type="month" id="filterMonthlyMonth" onchange="applyAdminMonthlyFilters()" class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">
+              <input type="text" id="filterMonthlySearch" oninput="applyAdminMonthlyFilters()"
+                placeholder="Search staff..." class="input-field"
+                style="padding: 0.5rem 0.75rem; font-size: 0.75rem; min-width: 200px;">
+              <button onclick="resetAdminMonthlyFilters()" class="btn btn-ghost btn-sm">Reset</button>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Month</th>
+                <th>Total Hours</th>
+                <th>Total Overtime</th>
+                <th>Days Worked</th>
+                <th>Last Sync</th>
+              </tr>
+            </thead>
+            <tbody id="monthlyTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 5: LEAVE REQUESTS -->
+      <div id="content-leaveTab" class="card hidden">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+          <h3 style="font-weight: 800; color: var(--slate-900); font-size: 0.875rem;">Employee Leave Applications</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Leave Details</th>
+                <th>Dates</th>
+                <th>Status</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leaveTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 6: STAFF PROFILES -->
+      <div id="content-usersTab" class="card hidden">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+          <h3 style="font-weight: 800; color: var(--slate-900); font-size: 0.875rem;">Employee Directory</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Work Status</th>
+                <th>Account Standing</th>
+                <th class="text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 7: TIMESHEET EXPORT -->
+      <div id="content-exportTab" class="card hidden">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+          <h3 style="font-weight: 800; color: var(--slate-900); font-size: 0.875rem;">Timesheet Export Engine</h3>
+          <p style="font-size: 0.75rem; color: var(--slate-500);">Generate and download standardized timesheet reports.
+          </p>
+        </div>
+        <div style="padding: 1.5rem;">
+          <form onsubmit="return false;" class="space-y" style="max-width: 48rem;">
+            <div class="grid-2 sm-grid-3" style="gap: 1rem;">
+              <div>
+                <label class="input-label">Select Employee</label>
+                <select id="exportEmail" class="input-field" style="font-size: 0.8125rem;"></select>
+              </div>
+              <div>
+                <label class="input-label">Start Date</label>
+                <input type="date" id="exportStart" required class="input-field" style="font-size: 0.8125rem;">
+              </div>
+              <div>
+                <label class="input-label">End Date</label>
+                <input type="date" id="exportEnd" required class="input-field" style="font-size: 0.8125rem;">
+              </div>
+            </div>
+            <div id="exportAlert" class="alert"></div>
+            <div class="flex flex-col sm-flex-row gap-3 mt-3">
+              <button type="button" onclick="handleExport('pdf')" class="btn btn-primary btn-md">📄 Export PDF</button>
+              <button type="button" onclick="handleExport('csv')" class="btn btn-secondary btn-md">📊 Export
+                CSV</button>
+              <button type="button" id="btnDownloadZip" onclick="requestZipExport()" class="btn btn-md"
+                style="background: var(--vuma-purple-accent); color: white; box-shadow: 0 4px 14px rgba(124,58,237,0.25);">
+                <span id="spinnerZip" class="spinner-ring hidden"
+                  style="width: 16px; height: 16px; border-width: 2px; margin: 0;"></span>
+                <span id="textZip">📦 Export ZIP</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- EDIT SUMMARY MODAL -->
+    <div id="editSummaryModal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="flex justify-between items-center mb-4">
+          <h3 style="font-size: 1rem; font-weight: 800; color: var(--slate-900);">⏱️ Edit Shift Times</h3>
+          <button onclick="closeSummaryEditModal()"
+            style="background: none; border: none; cursor: pointer; font-size: 1.25rem; color: var(--slate-400); font-weight: 800;">&times;</button>
+        </div>
+        <form onsubmit="handleSummaryUpdateSave(event)" class="space-y-sm">
+          <input type="hidden" id="editSumId">
+          <div
+            style="background: var(--slate-50); padding: 0.75rem; border-radius: 0.75rem; border: 1px solid var(--slate-200); font-size: 0.75rem; color: var(--slate-500); margin-bottom: 1rem;">
+            <span style="display: block; font-weight: 800; color: var(--slate-800);" id="editSumName"></span>
+            <span style="display: block;" id="editSumDate"></span>
+            <p style="margin-top: 0.5rem; font-size: 0.625rem; line-height: 1.4;">Editing will recalculate hours,
+              overtime, and sync weekly/monthly summaries.</p>
+          </div>
+          <div class="grid-2">
+            <div><label class="input-label">Clock In</label><input type="time" step="1" id="editSumIn"
+                class="input-field"></div>
+            <div><label class="input-label">Clock Out</label><input type="time" step="1" id="editSumOut"
+                class="input-field"></div>
+          </div>
+          <div class="grid-2 mt-3">
+            <button type="button" onclick="closeSummaryEditModal()" class="btn btn-ghost btn-md w-full">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-md w-full">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- LEAVE MODAL -->
+    <div id="leaveModal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="flex justify-between items-center mb-4">
+          <h3 style="font-size: 1rem; font-weight: 800; color: var(--slate-900);">📅 Register Leave Request</h3>
+          <button onclick="closeLeaveModal()"
+            style="background: none; border: none; cursor: pointer; font-size: 1.25rem; color: var(--slate-400); font-weight: 800;">&times;</button>
+        </div>
+        <form onsubmit="handleLeaveSubmit(event)" class="space-y-sm">
+          <div>
+            <label class="input-label">Leave Type</label>
+            <select id="leaveType" required class="input-field">
+              <option value="Annual">Annual Leave</option>
+              <option value="Sick">Sick Leave</option>
+              <option value="Family Responsibility">Family Responsibility Leave</option>
+              <option value="Unpaid">Unpaid Leave</option>
+            </select>
+          </div>
+          <div><label class="input-label">Start Date</label><input type="date" id="leaveStartDate" required
+              class="input-field"></div>
+          <div><label class="input-label">End Date</label><input type="date" id="leaveEndDate" required
+              class="input-field"></div>
+          <div class="grid-2 mt-3">
+            <button type="button" onclick="closeLeaveModal()" class="btn btn-ghost btn-md w-full">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-md w-full">Submit Request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- EDIT EMPLOYEE MODAL -->
+    <div id="editModal" class="modal-overlay">
+      <div class="modal-card">
+        <h3 style="font-size: 1rem; font-weight: 800; color: var(--slate-900); margin-bottom: 1rem;">Modify Employee
+          Profile</h3>
+        <form onsubmit="handleAdminUpdateSave(event)" class="space-y-sm">
+          <input type="hidden" id="editEmail">
+          <div><label class="input-label">First Name</label><input type="text" id="editFirst" required
+              class="input-field"></div>
+          <div><label class="input-label">Last Name</label><input type="text" id="editLast" required
+              class="input-field"></div>
+          <div>
+            <label class="input-label">Account Standing</label>
+            <select id="editStatus" class="input-field">
+              <option value="Verified">Verified</option>
+              <option value="Blocked">Blocked</option>
+            </select>
+          </div>
+          <div><label class="input-label" style="color: var(--vuma-magenta);">Reset Password (optional)</label><input
+              type="password" id="editPassword" placeholder="Enter new password" class="input-field"></div>
+          <div class="grid-2 mt-3">
+            <button type="button" onclick="closeEditModal()" class="btn btn-ghost btn-md w-full">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-md w-full">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="../shared/js/api.js"></script>
+  <script src="../shared/js/leave.js"></script>
+  <script src="admin.js"></script>
+</body>
+
+</html>
