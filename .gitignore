@@ -1,3 +1,7 @@
-/Code.gs
-/Promt.md
-/Example code.md
+# Exclude Apps Script code
+Code.gs
+
+# Exclude prompt and example files
+Promt.md
+Example code.md
+Gs code.md
