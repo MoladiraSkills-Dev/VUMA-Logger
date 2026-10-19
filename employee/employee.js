@@ -4,15 +4,115 @@
 // ============================================================================
 
 const LOGIN_URL = "../index.html";
+let CURRENT_TODAY_SHIFT = null;
 
 (function initEmployeePage() {
   const user = requireSession("Employee", LOGIN_URL);
   if (!user) return;
   document.getElementById("employeeGreeting").innerText = `Welcome, ${user.firstName}!`;
+
+  // Hydrate instantly from stored session if present
+  const session = getSession();
+  if (session && session.todayShift) {
+    CURRENT_TODAY_SHIFT = session.todayShift;
+    updateEmployeeTactileStates(session.todayShift);
+  }
+
+  // Always refresh live status from server
+  refreshEmployeeShiftStatus();
 })();
+
+function updateEmployeeTactileStates(shift) {
+  const btnIn = document.getElementById("btnClockIn");
+  const btnOut = document.getElementById("btnClockOut");
+  const inSub = document.getElementById("clockInSubtext");
+  const outSub = document.getElementById("clockOutSubtext");
+  const inBadge = document.getElementById("clockInBadge");
+  const outBadge = document.getElementById("clockOutBadge");
+
+  if (!btnIn || !btnOut) return;
+
+  const hasIn = shift && (shift.hasClockedIn || (shift.clockIn && shift.clockIn !== "--"));
+  const hasOut = shift && (shift.hasClockedOut || (shift.clockOut && shift.clockOut !== "--"));
+  const isCompleted = shift && (shift.status === "Completed" || hasOut);
+
+  if (isCompleted) {
+    btnIn.disabled = true;
+    btnIn.title = "Shift finalized for today";
+    if (inSub) inSub.innerText = "Shift finalized for today";
+    if (inBadge) {
+      inBadge.classList.remove("hidden");
+      inBadge.innerText = `✓ Clocked In (${shift.clockIn})`;
+    }
+
+    btnOut.disabled = true;
+    btnOut.title = "Shift finalized for today";
+    if (outSub) outSub.innerText = `Shift finalized (${shift.clockOut})`;
+    if (outBadge) {
+      outBadge.classList.remove("hidden");
+      outBadge.innerText = "✓ Completed";
+    }
+  } else if (hasIn) {
+    btnIn.disabled = true;
+    btnIn.title = `Already clocked in at ${shift.clockIn}`;
+    if (inSub) inSub.innerText = `Shift active since ${shift.floorIn && shift.floorIn !== "--" ? shift.floorIn : shift.clockIn}`;
+    if (inBadge) {
+      inBadge.classList.remove("hidden");
+      inBadge.innerText = `✓ In at ${shift.clockIn}`;
+    }
+
+    btnOut.disabled = false;
+    btnOut.title = "Conclude your shift for today";
+    if (outSub) outSub.innerText = "Conclude daily shift & GPS";
+    if (outBadge) {
+      outBadge.classList.add("hidden");
+    }
+  } else {
+    // Not clocked in yet: Clock Out strictly disabled
+    btnIn.disabled = false;
+    btnIn.title = "Clock in to start your shift";
+    if (inSub) inSub.innerText = "Log morning shift start with GPS";
+    if (inBadge) inBadge.classList.add("hidden");
+
+    btnOut.disabled = true;
+    btnOut.title = "You cannot clock out until you have clocked in for today";
+    if (outSub) outSub.innerText = "Clock in first to enable clock out";
+    if (outBadge) {
+      outBadge.classList.remove("hidden");
+      outBadge.innerText = "Clock-In Required";
+    }
+  }
+}
+
+function refreshEmployeeShiftStatus() {
+  if (!ACTIVE_SESSION_USER || !ACTIVE_SESSION_USER.email) return;
+  google.script.run
+    .withSuccessHandler(function (res) {
+      if (res && res.status === "success" && res.todayShift) {
+        CURRENT_TODAY_SHIFT = res.todayShift;
+        const session = getSession();
+        if (session) {
+          session.todayShift = res.todayShift;
+          sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        }
+        updateEmployeeTactileStates(res.todayShift);
+      }
+    })
+    .getTodayShiftStatus(ACTIVE_SESSION_USER.email);
+}
 
 function triggerClockAction(actionType) {
   document.getElementById("logAlert").className = "alert";
+
+  // Strict client-side guard: block Clock Out immediately if not clocked in today
+  if (actionType === "Clock Out") {
+    const hasIn = CURRENT_TODAY_SHIFT && (CURRENT_TODAY_SHIFT.hasClockedIn || (CURRENT_TODAY_SHIFT.clockIn && CURRENT_TODAY_SHIFT.clockIn !== "--"));
+    if (!hasIn) {
+      showAlert("logAlert", "Action Blocked: You cannot clock out because you have not clocked in for today yet. Please clock in first.", true);
+      return;
+    }
+  }
+
   showLoader(true, "Querying device location...");
   if (!navigator.geolocation) {
     showLoader(false);
@@ -27,9 +127,14 @@ function triggerClockAction(actionType) {
           showLoader(false);
           if (res.status === "success") {
             showAlert("logAlert", `${res.action} recorded at ${res.time} at ${res.location}`, false);
+            refreshEmployeeShiftStatus();
           } else {
             showAlert("logAlert", res.message, true);
           }
+        })
+        .withFailureHandler(function (err) {
+          showLoader(false);
+          showAlert("logAlert", "Server communication error: " + (err.message || err), true);
         })
         .processActivityLog(ACTIVE_SESSION_USER.email, ACTIVE_SESSION_USER.firstName, ACTIVE_SESSION_USER.lastName, actionType, pos.coords.latitude, pos.coords.longitude);
     },

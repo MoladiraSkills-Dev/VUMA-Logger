@@ -56,7 +56,7 @@ const MockRunner = {
 
 // List of backend functions we want to support
 const backendMethods = [
-  "registerUser", "loginUser", "processActivityLog", "getAdminDashboardData",
+  "registerUser", "loginUser", "processActivityLog", "getTodayShiftStatus", "getAdminDashboardData",
   "submitLeaveRequest", "adminUpdateLeaveStatus", "adminUpdateUser",
   "adminDeleteDailySummary", "adminUpdateDailySummary", "exportTimesheetData",
   "generateTimesheetsZip"
@@ -87,10 +87,11 @@ const SESSION_KEY = "vumaLoggerSession";
 const DASHBOARD_CACHE_KEY = "vumaLoggerAdminCache";
 let ACTIVE_SESSION_USER = null;
 
-function saveSession(user, accountType, dashboardData = null) {
+function saveSession(user, accountType, dashboardData = null, todayShift = null) {
   sessionStorage.setItem(SESSION_KEY, JSON.stringify({ 
     user: user, 
-    accountType: accountType 
+    accountType: accountType,
+    todayShift: todayShift 
   }));
   if (dashboardData) {
     try {

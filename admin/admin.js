@@ -41,12 +41,101 @@ function showTableSkeletons() {
 function toggleAdminClockPanel() {
   const panel = document.getElementById("adminSelfClockPanel");
   const txt = document.getElementById("adminClockToggleText");
-  if (panel.classList.contains("hidden")) { panel.classList.remove("hidden"); txt.innerText = "Return to Dashboard View"; }
-  else { panel.classList.add("hidden"); txt.innerText = "Go to My Clock In / Out"; }
+  if (panel.classList.contains("hidden")) { 
+    panel.classList.remove("hidden"); 
+    txt.innerText = "Return to Dashboard View";
+    updateAdminAttendanceButtonStates();
+  } else { 
+    panel.classList.add("hidden"); 
+    txt.innerText = "Go to My Clock In / Out"; 
+  }
+}
+
+function updateAdminAttendanceButtonStates() {
+  const btnIn = document.getElementById("btnAdminClockIn");
+  const btnOut = document.getElementById("btnAdminClockOut");
+  const hint = document.getElementById("adminClockStatusHint");
+  if (!btnIn || !btnOut || !ACTIVE_SESSION_USER) return;
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const adminEmail = (ACTIVE_SESSION_USER.email || "").trim().toLowerCase();
+
+  let hasClockedIn = false;
+  let hasClockedOut = false;
+  let inTime = "";
+  let outTime = "";
+
+  (CACHED_SUMMARIES_ARRAY || []).forEach(s => {
+    if (String(s.email).trim().toLowerCase() === adminEmail && String(s.date).trim() === todayStr) {
+      if (s.clockIn && s.clockIn !== "--") {
+        hasClockedIn = true;
+        inTime = s.clockIn;
+      }
+      if (s.clockOut && s.clockOut !== "--") {
+        hasClockedOut = true;
+        outTime = s.clockOut;
+      }
+    }
+  });
+
+  (CACHED_LOGS_ARRAY || []).forEach(l => {
+    if (String(l.email).trim().toLowerCase() === adminEmail && String(l.date).trim() === todayStr) {
+      if (l.action === "Clock In") {
+        hasClockedIn = true;
+        if (!inTime) inTime = l.time;
+      } else if (l.action === "Clock Out") {
+        hasClockedOut = true;
+        if (!outTime) outTime = l.time;
+      }
+    }
+  });
+
+  if (hasClockedOut) {
+    btnIn.disabled = true;
+    btnIn.title = "Shift completed today";
+    btnOut.disabled = true;
+    btnOut.title = "Shift completed today";
+    if (hint) hint.innerText = `✓ Shift Completed Today (${inTime} - ${outTime})`;
+  } else if (hasClockedIn) {
+    btnIn.disabled = true;
+    btnIn.title = `Already clocked in at ${inTime}`;
+    btnOut.disabled = false;
+    btnOut.title = "Record shift conclusion with GPS";
+    if (hint) hint.innerText = `Shift active since ${inTime}. Ready to clock out.`;
+  } else {
+    btnIn.disabled = false;
+    btnIn.title = "Record shift start with GPS";
+    btnOut.disabled = true;
+    btnOut.title = "You cannot clock out until you have clocked in for today";
+    if (hint) hint.innerText = "Clock in first to enable clock out";
+  }
 }
 
 function triggerAdminClockAction(actionType) {
-  document.getElementById("adminLogAlert").className = "alert";
+  const alertEl = document.getElementById("adminLogAlert");
+  alertEl.className = "alert";
+
+  // Strict client-side guard: block Clock Out immediately if not clocked in today
+  if (actionType === "Clock Out") {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const adminEmail = (ACTIVE_SESSION_USER.email || "").trim().toLowerCase();
+    let hasClockedIn = false;
+    (CACHED_SUMMARIES_ARRAY || []).forEach(s => {
+      if (String(s.email).trim().toLowerCase() === adminEmail && String(s.date).trim() === todayStr && s.clockIn && s.clockIn !== "--") {
+        hasClockedIn = true;
+      }
+    });
+    (CACHED_LOGS_ARRAY || []).forEach(l => {
+      if (String(l.email).trim().toLowerCase() === adminEmail && String(l.date).trim() === todayStr && l.action === "Clock In") {
+        hasClockedIn = true;
+      }
+    });
+    if (!hasClockedIn) {
+      showAlert("adminLogAlert", "Action Blocked: You cannot clock out because you have not clocked in for today yet. Please clock in first.", true);
+      return;
+    }
+  }
+
   showLoader(true, "Querying device location...");
   if (!navigator.geolocation) { showLoader(false); showAlert("adminLogAlert", "GPS not supported.", true); return; }
   navigator.geolocation.getCurrentPosition(
@@ -55,8 +144,15 @@ function triggerAdminClockAction(actionType) {
       google.script.run
         .withSuccessHandler(function (res) {
           showLoader(false);
-          if (res.status === "success") { showAlert("adminLogAlert", `${res.action} recorded at ${res.time} at ${res.location}`, false); loadAdminDashboard(false); }
+          if (res.status === "success") { 
+            showAlert("adminLogAlert", `${res.action} recorded at ${res.time} at ${res.location}`, false); 
+            loadAdminDashboard(false); 
+          }
           else { showAlert("adminLogAlert", res.message, true); }
+        })
+        .withFailureHandler(function (err) {
+          showLoader(false);
+          showAlert("adminLogAlert", "Server error: " + (err.message || err), true);
         })
         .processActivityLog(ACTIVE_SESSION_USER.email, ACTIVE_SESSION_USER.firstName, ACTIVE_SESSION_USER.lastName, actionType, pos.coords.latitude, pos.coords.longitude);
     },
@@ -94,6 +190,7 @@ function applyAdminDashboardData(res) {
   applyAdminSummaryFilters();
   applyAdminWeeklyFilters();
   applyAdminMonthlyFilters();
+  updateAdminAttendanceButtonStates();
 }
 
 function loadAdminDashboard(showSpinner = true) {

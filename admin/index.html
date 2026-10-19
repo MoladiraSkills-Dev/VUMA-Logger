@@ -49,13 +49,14 @@
             directly.</p>
         </div>
         <div id="adminLogAlert" class="alert mb-4"></div>
-        <div class="grid-2 mb-4">
-          <button onclick="triggerAdminClockAction('Clock In')" class="btn btn-primary btn-md" style="width: 100%;">⏰
+        <div class="grid-2 mb-3">
+          <button type="button" id="btnAdminClockIn" onclick="triggerAdminClockAction('Clock In')" class="btn btn-primary btn-md" style="width: 100%;">⏰
             Clock In</button>
-          <button onclick="triggerAdminClockAction('Clock Out')" class="btn btn-md"
+          <button type="button" id="btnAdminClockOut" onclick="triggerAdminClockAction('Clock Out')" class="btn btn-md" disabled title="You cannot clock out until you have clocked in for today"
             style="width: 100%; background: linear-gradient(135deg, #EA580C, #C2410C); color: white; box-shadow: 0 4px 14px rgba(234,88,12,0.25);">🚪
             Clock Out</button>
         </div>
+        <p id="adminClockStatusHint" style="font-size: 0.75rem; color: var(--slate-500); text-align: center; margin-top: -0.25rem; margin-bottom: 1rem;">Clock in first to enable clock out</p>
         <button onclick="openLeaveModal()" class="btn btn-ghost btn-full btn-sm">📅 Register Leave</button>
       </div>
 

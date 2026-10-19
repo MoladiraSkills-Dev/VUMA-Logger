@@ -42,13 +42,27 @@
       </p>
 
       <div class="flex flex-col gap-3 mb-4">
-        <button onclick="triggerClockAction('Clock In')" class="clock-btn clock-btn-in">
-          <div class="flex items-center gap-3"><span class="icon">⏰</span><span class="label">Clock In</span></div>
-          <span class="arrow">➔</span>
+        <button type="button" id="btnClockIn" onclick="triggerClockAction('Clock In')" class="clock-btn clock-btn-in">
+          <div class="flex items-center gap-3">
+            <span class="icon">⏰</span>
+            <div class="text-left">
+              <span class="label">Clock In</span>
+              <div class="clock-subtext" id="clockInSubtext">Log morning shift start with GPS</div>
+            </div>
+          </div>
+          <span class="badge-status hidden" id="clockInBadge">✓ Logged Today</span>
+          <span class="arrow" id="clockInArrow">➔</span>
         </button>
-        <button onclick="triggerClockAction('Clock Out')" class="clock-btn clock-btn-out">
-          <div class="flex items-center gap-3"><span class="icon">🚪</span><span class="label">Clock Out</span></div>
-          <span class="arrow">➔</span>
+        <button type="button" id="btnClockOut" onclick="triggerClockAction('Clock Out')" class="clock-btn clock-btn-out" disabled title="You cannot clock out until you have clocked in for today">
+          <div class="flex items-center gap-3">
+            <span class="icon">🚪</span>
+            <div class="text-left">
+              <span class="label">Clock Out</span>
+              <div class="clock-subtext" id="clockOutSubtext">Clock in first to enable clock out</div>
+            </div>
+          </div>
+          <span class="badge-status" id="clockOutBadge">Clock-In Required</span>
+          <span class="arrow" id="clockOutArrow">➔</span>
         </button>
       </div>
 

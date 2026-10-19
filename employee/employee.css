@@ -33,17 +33,42 @@
   box-shadow: 0 6px 20px rgba(234, 88, 12, 0.35);
 }
 
-.clock-btn:hover {
+.clock-btn:hover:not(:disabled) {
   filter: brightness(1.05);
 }
 
 .clock-btn .icon {
   font-size: 1.75rem;
+  line-height: 1;
 }
 
 .clock-btn .label {
   font-size: 1.125rem;
   font-weight: 700;
+  display: block;
+}
+
+.clock-btn .clock-subtext {
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0.88;
+  margin-top: 0.15rem;
+}
+
+.clock-btn .badge-status {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.clock-btn .badge-status.hidden {
+  display: none !important;
 }
 
 .clock-btn .arrow {

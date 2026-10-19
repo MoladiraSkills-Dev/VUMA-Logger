@@ -227,6 +227,18 @@ body {
   font-size: 0.75rem;
 }
 
+.btn:disabled,
+.btn[disabled],
+.clock-btn:disabled,
+.clock-btn[disabled] {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  transform: none !important;
+  box-shadow: none !important;
+  filter: grayscale(40%) !important;
+}
+
 /* --- Inputs --- */
 .input-field {
   width: 100%;
