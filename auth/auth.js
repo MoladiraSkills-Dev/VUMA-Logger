@@ -59,7 +59,7 @@ function handleLoginSubmit(e) {
     })
     .withSuccessHandler(function (res) {
       if (res.status === "success") {
-        saveSession(res.user, res.accountType, res.dashboardData || null, res.todayShift || null);
+        saveSession(res.user, res.accountType, res.dashboardData || null, res.todayShift || null, res.latestLeave || null);
         showLoader(true, "Opening portal...");
         window.location.replace(res.accountType === "Admin" ? ADMIN_PAGE : EMPLOYEE_PAGE);
       } else {

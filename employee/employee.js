@@ -17,10 +17,55 @@ let CURRENT_TODAY_SHIFT = null;
     CURRENT_TODAY_SHIFT = session.todayShift;
     updateEmployeeTactileStates(session.todayShift);
   }
+  if (session && session.latestLeave) {
+    updateEmployeeLeaveBadge(session.latestLeave);
+  }
 
   // Always refresh live status from server
   refreshEmployeeShiftStatus();
 })();
+
+function updateEmployeeLeaveBadge(leave) {
+  const badge = document.getElementById("employeeLeaveBadge");
+  const card = document.getElementById("employeeLeaveStatusCard");
+  const cardText = document.getElementById("employeeLeaveStatusText");
+  if (!badge) return;
+
+  if (!leave || !leave.status) {
+    badge.classList.add("hidden");
+    if (card) card.classList.add("hidden");
+    return;
+  }
+
+  const status = String(leave.status).trim();
+  badge.classList.remove("hidden");
+
+  if (status.toLowerCase() === "pending") {
+    badge.className = "badge badge-warning";
+    badge.innerText = "Application Pending";
+    if (card && cardText) {
+      card.classList.remove("hidden");
+      cardText.innerHTML = `⏳ Your <strong>${leave.type} Leave</strong> application (${leave.startDate} to ${leave.endDate}) is awaiting admin approval.`;
+    }
+  } else if (status.toLowerCase() === "approved") {
+    badge.className = "badge badge-success";
+    badge.innerText = "Leave Approved";
+    if (card && cardText) {
+      card.classList.remove("hidden");
+      cardText.innerHTML = `✅ <strong>${leave.type} Leave</strong> approved from ${leave.startDate} to ${leave.endDate}.`;
+    }
+  } else if (status.toLowerCase() === "rejected") {
+    badge.className = "badge badge-danger";
+    badge.innerText = "Application Declined";
+    if (card && cardText) {
+      card.classList.remove("hidden");
+      cardText.innerHTML = `❌ <strong>${leave.type} Leave</strong> (${leave.startDate} to ${leave.endDate}) was declined by admin.`;
+    }
+  } else {
+    badge.classList.add("hidden");
+    if (card) card.classList.add("hidden");
+  }
+}
 
 function updateEmployeeTactileStates(shift) {
   const btnIn = document.getElementById("btnClockIn");
@@ -88,14 +133,20 @@ function refreshEmployeeShiftStatus() {
   if (!ACTIVE_SESSION_USER || !ACTIVE_SESSION_USER.email) return;
   google.script.run
     .withSuccessHandler(function (res) {
-      if (res && res.status === "success" && res.todayShift) {
-        CURRENT_TODAY_SHIFT = res.todayShift;
+      if (res && res.status === "success") {
+        if (res.todayShift) {
+          CURRENT_TODAY_SHIFT = res.todayShift;
+          updateEmployeeTactileStates(res.todayShift);
+        }
+        if (res.latestLeave !== undefined) {
+          updateEmployeeLeaveBadge(res.latestLeave);
+        }
         const session = getSession();
         if (session) {
-          session.todayShift = res.todayShift;
+          if (res.todayShift) session.todayShift = res.todayShift;
+          if (res.latestLeave !== undefined) session.latestLeave = res.latestLeave;
           sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
         }
-        updateEmployeeTactileStates(res.todayShift);
       }
     })
     .getTodayShiftStatus(ACTIVE_SESSION_USER.email);

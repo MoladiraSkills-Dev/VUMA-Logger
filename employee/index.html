@@ -66,9 +66,15 @@
         </button>
       </div>
 
-      <button onclick="openLeaveModal()" class="btn btn-ghost btn-full btn-md" style="gap: 0.375rem;">
-        <span>📅</span> Request Leave
-      </button>
+      <div class="flex flex-col gap-2">
+        <button onclick="openLeaveModal()" class="btn btn-ghost btn-full btn-md" style="gap: 0.375rem; position: relative;">
+          <span>📅</span> Request Leave
+          <span id="employeeLeaveBadge" class="badge badge-warning hidden" style="margin-left: 0.5rem; font-size: 0.625rem;">Pending</span>
+        </button>
+        <div id="employeeLeaveStatusCard" class="hidden" style="font-size: 0.75rem; padding: 0.5rem 0.75rem; border-radius: 0.5rem; background: var(--slate-50); border: 1px solid var(--slate-200); text-align: center;">
+          <span id="employeeLeaveStatusText" style="color: var(--slate-600); font-weight: 600;"></span>
+        </div>
+      </div>
     </section>
 
     <!-- LEAVE MODAL -->

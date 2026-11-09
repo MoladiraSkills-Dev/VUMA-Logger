@@ -66,7 +66,7 @@
         <button onclick="switchAdminTab('summariesTab')" id="btn-summariesTab" class="tab-btn">Daily Summaries</button>
         <button onclick="switchAdminTab('weeklyTab')" id="btn-weeklyTab" class="tab-btn">Weekly</button>
         <button onclick="switchAdminTab('monthlyTab')" id="btn-monthlyTab" class="tab-btn">Monthly</button>
-        <button onclick="switchAdminTab('leaveTab')" id="btn-leaveTab" class="tab-btn">Leave</button>
+        <button onclick="switchAdminTab('leaveTab')" id="btn-leaveTab" class="tab-btn">Leave <span id="leaveTabBadge" class="tab-notify-badge hidden">0</span></button>
         <button onclick="switchAdminTab('usersTab')" id="btn-usersTab" class="tab-btn">Staff</button>
         <button onclick="switchAdminTab('exportTab')" id="btn-exportTab" class="tab-btn">Export</button>
       </div>
@@ -217,8 +217,9 @@
 
       <!-- TAB 5: LEAVE REQUESTS -->
       <div id="content-leaveTab" class="card hidden">
-        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50);">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50); display: flex; justify-content: space-between; align-items: center;">
           <h3 style="font-weight: 800; color: var(--slate-900); font-size: 0.875rem;">Employee Leave Applications</h3>
+          <span id="leavePendingHeaderBadge" class="badge badge-warning hidden">0 Pending</span>
         </div>
         <div class="overflow-x-auto">
           <table class="data-table">

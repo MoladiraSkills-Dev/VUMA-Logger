@@ -20,8 +20,17 @@ function handleLeaveSubmit(e) {
       showLoader(false); closeLeaveModal();
       if (res.status === "success") {
         alert(res.message);
-        // Admin page defines loadAdminDashboard; the employee page does not.
+        // Admin page defines loadAdminDashboard; the employee page defines refreshEmployeeShiftStatus.
         if (typeof loadAdminDashboard === "function") loadAdminDashboard();
+        if (typeof refreshEmployeeShiftStatus === "function") refreshEmployeeShiftStatus();
+        if (typeof updateEmployeeLeaveBadge === "function") {
+          updateEmployeeLeaveBadge({
+            type: document.getElementById("leaveType").value,
+            startDate: document.getElementById("leaveStartDate").value,
+            endDate: document.getElementById("leaveEndDate").value,
+            status: "Pending"
+          });
+        }
       } else { alert("Error: " + res.message); }
     })
     .submitLeaveRequest(ACTIVE_SESSION_USER.email, ACTIVE_SESSION_USER.firstName, ACTIVE_SESSION_USER.lastName,

@@ -483,6 +483,34 @@ function renderMonthlyTable(data) {
 
 // ---- Leave ----
 function renderLeaveRequestsTable(requests) {
+  const pendingCount = (requests || []).filter(r => (r.status || "").toLowerCase() === "pending").length;
+
+  // Update tab notification badge
+  const tabBadge = document.getElementById("leaveTabBadge");
+  if (tabBadge) {
+    if (pendingCount > 0) {
+      tabBadge.innerText = pendingCount;
+      tabBadge.classList.remove("hidden");
+    } else {
+      tabBadge.innerText = "0";
+      tabBadge.classList.add("hidden");
+    }
+  }
+
+  // Update table header badge
+  const headerBadge = document.getElementById("leavePendingHeaderBadge");
+  if (headerBadge) {
+    if (pendingCount > 0) {
+      headerBadge.innerText = `${pendingCount} Pending`;
+      headerBadge.className = "badge badge-warning";
+      headerBadge.classList.remove("hidden");
+    } else {
+      headerBadge.innerText = "All Reviewed";
+      headerBadge.className = "badge badge-success";
+      headerBadge.classList.remove("hidden");
+    }
+  }
+
   const body = document.getElementById("leaveTableBody");
   body.innerHTML = requests.length === 0 ? '<tr><td colspan="5" style="padding:1rem;text-align:center;color:var(--slate-500);">No leave applications on record.</td></tr>' : "";
   requests.forEach(req => {

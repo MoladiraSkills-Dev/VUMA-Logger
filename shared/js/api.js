@@ -87,11 +87,12 @@ const SESSION_KEY = "vumaLoggerSession";
 const DASHBOARD_CACHE_KEY = "vumaLoggerAdminCache";
 let ACTIVE_SESSION_USER = null;
 
-function saveSession(user, accountType, dashboardData = null, todayShift = null) {
+function saveSession(user, accountType, dashboardData = null, todayShift = null, latestLeave = null) {
   sessionStorage.setItem(SESSION_KEY, JSON.stringify({ 
     user: user, 
     accountType: accountType,
-    todayShift: todayShift 
+    todayShift: todayShift,
+    latestLeave: latestLeave 
   }));
   if (dashboardData) {
     try {
