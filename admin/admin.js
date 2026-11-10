@@ -41,13 +41,13 @@ function showTableSkeletons() {
 function toggleAdminClockPanel() {
   const panel = document.getElementById("adminSelfClockPanel");
   const txt = document.getElementById("adminClockToggleText");
-  if (panel.classList.contains("hidden")) { 
-    panel.classList.remove("hidden"); 
+  if (panel.classList.contains("hidden")) {
+    panel.classList.remove("hidden");
     txt.innerText = "Return to Dashboard View";
     updateAdminAttendanceButtonStates();
-  } else { 
-    panel.classList.add("hidden"); 
-    txt.innerText = "Go to My Clock In / Out"; 
+  } else {
+    panel.classList.add("hidden");
+    txt.innerText = "Go to My Clock In / Out";
   }
 }
 
@@ -101,7 +101,8 @@ function updateAdminAttendanceButtonStates() {
     btnIn.title = `Already clocked in at ${inTime}`;
     btnOut.disabled = false;
     btnOut.title = "Record shift conclusion with GPS";
-    if (hint) hint.innerText = `Shift active since ${inTime}. Ready to clock out.`;
+    const floorDisplay = getEffectiveFloorInTime(inTime);
+    if (hint) hint.innerText = `Shift active since ${floorDisplay} (Logged at ${inTime}). Ready to clock out.`;
   } else {
     btnIn.disabled = false;
     btnIn.title = "Record shift start with GPS";
@@ -144,9 +145,9 @@ function triggerAdminClockAction(actionType) {
       google.script.run
         .withSuccessHandler(function (res) {
           showLoader(false);
-          if (res.status === "success") { 
-            showAlert("adminLogAlert", `${res.action} recorded at ${res.time} at ${res.location}`, false); 
-            loadAdminDashboard(false); 
+          if (res.status === "success") {
+            showAlert("adminLogAlert", `${res.action} recorded at ${res.time} at ${res.location}`, false);
+            loadAdminDashboard(false);
           }
           else { showAlert("adminLogAlert", res.message, true); }
         })
@@ -196,17 +197,17 @@ function applyAdminDashboardData(res) {
 function loadAdminDashboard(showSpinner = true) {
   if (showSpinner) showLoader(true, "Loading dashboard...");
   google.script.run
-    .withFailureHandler(function (err) { 
-      if (showSpinner) showLoader(false); 
-      console.error("Dashboard error:", err); 
+    .withFailureHandler(function (err) {
+      if (showSpinner) showLoader(false);
+      console.error("Dashboard error:", err);
     })
     .withSuccessHandler(function (res) {
       if (showSpinner) showLoader(false);
       if (res.status === "success") {
         updateCachedDashboardData(res);
         applyAdminDashboardData(res);
-      } else if (showSpinner) { 
-        alert("Error: " + res.message); 
+      } else if (showSpinner) {
+        alert("Error: " + res.message);
       }
     })
     .getAdminDashboardData();
@@ -355,7 +356,7 @@ function renderSummariesTable(data) {
       <td><span style="font-weight:700;color:var(--slate-900);display:block;">${sum.firstName} ${sum.lastName}</span><span style="font-size:0.625rem;color:var(--slate-500);display:block;">${sum.email}</span></td>
       <td style="font-weight:500;color:var(--slate-700);">${sum.date}</td>
       <td><span style="font-size:0.75rem;color:var(--slate-800);display:block;">In: ${sum.clockIn}</span><span style="font-size:0.75rem;color:var(--slate-500);display:block;">Out: ${sum.clockOut}</span></td>
-      <td><span class="font-mono" style="font-size:0.75rem;color:var(--vuma-magenta);font-weight:600;display:block;">In: ${formatTimeNoSec(sum.floorIn)}</span><span class="font-mono" style="font-size:0.75rem;color:#EA580C;font-weight:600;display:block;">Out: ${sum.floorOut}</span></td>
+      <td><span class="font-mono" style="font-size:0.75rem;color:var(--vuma-magenta);font-weight:600;display:block;">In: ${formatFloorTimeDisplay(sum.floorIn, sum.clockIn)}</span><span class="font-mono" style="font-size:0.75rem;color:#EA580C;font-weight:600;display:block;">Out: ${sum.floorOut}</span></td>
       <td style="font-weight:600;color:var(--slate-900);">${sum.totalHours}</td>
       <td>${otBadge}</td>
       <td>${statusBadge}</td>
@@ -365,6 +366,32 @@ function renderSummariesTable(data) {
       </td>`;
     body.appendChild(row);
   });
+}
+
+function getEffectiveFloorInTime(timeStr) {
+  if (!timeStr || timeStr === "--" || timeStr === "N/A") return "--";
+  const cleanStr = String(timeStr).trim();
+  const isPM = cleanStr.toUpperCase().includes("PM");
+  const isAM = cleanStr.toUpperCase().includes("AM");
+  const matches = cleanStr.match(/\d+/g);
+  if (matches && matches.length >= 2) {
+    let hours = parseInt(matches[0], 10);
+    const mins = parseInt(matches[1], 10);
+    if (isPM && hours < 12) hours += 12;
+    if (isAM && hours === 12) hours = 0;
+    if (hours < 8 || (hours === 8 && mins === 0)) {
+      return "08:00";
+    }
+    return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+  }
+  return cleanStr;
+}
+
+function formatFloorTimeDisplay(floorIn, clockIn) {
+  if (floorIn && floorIn !== "--" && floorIn !== "N/A") {
+    return formatTimeNoSec(floorIn);
+  }
+  return formatTimeNoSec(getEffectiveFloorInTime(clockIn));
 }
 
 function formatTimeNoSec(t) {

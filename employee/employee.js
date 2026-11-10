@@ -67,6 +67,25 @@ function updateEmployeeLeaveBadge(leave) {
   }
 }
 
+function getEffectiveFloorInTime(timeStr) {
+  if (!timeStr || timeStr === "--" || timeStr === "N/A") return "--";
+  const cleanStr = String(timeStr).trim();
+  const isPM = cleanStr.toUpperCase().includes("PM");
+  const isAM = cleanStr.toUpperCase().includes("AM");
+  const matches = cleanStr.match(/\d+/g);
+  if (matches && matches.length >= 2) {
+    let hours = parseInt(matches[0], 10);
+    const mins = parseInt(matches[1], 10);
+    if (isPM && hours < 12) hours += 12;
+    if (isAM && hours === 12) hours = 0;
+    if (hours < 8 || (hours === 8 && mins === 0)) {
+      return "08:00";
+    }
+    return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+  }
+  return cleanStr;
+}
+
 function updateEmployeeTactileStates(shift) {
   const btnIn = document.getElementById("btnClockIn");
   const btnOut = document.getElementById("btnClockOut");
@@ -100,7 +119,8 @@ function updateEmployeeTactileStates(shift) {
   } else if (hasIn) {
     btnIn.disabled = true;
     btnIn.title = `Already clocked in at ${shift.clockIn}`;
-    if (inSub) inSub.innerText = `Shift active since ${shift.floorIn && shift.floorIn !== "--" ? shift.floorIn : shift.clockIn}`;
+    const effectiveFloor = (shift.floorIn && shift.floorIn !== "--") ? shift.floorIn : getEffectiveFloorInTime(shift.clockIn);
+    if (inSub) inSub.innerText = `Shift active since ${effectiveFloor}`;
     if (inBadge) {
       inBadge.classList.remove("hidden");
       inBadge.innerText = `✓ In at ${shift.clockIn}`;
